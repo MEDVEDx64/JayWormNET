@@ -189,7 +189,7 @@ class HTTPServerListener extends Thread {
 					Game g = HTTPServer.games.get(i);
 					if(params.get("Channel").equals(g.channel))
 						body = body + "<GAME " + g.name + " " + g.hosterNickname + " "
-								+ g.hosterAddress + " " + g.loc + " 1 0 "
+								+ g.hosterAddress + " " + g.loc + " 1 " + (g.password == null? "0 ": "1 ") +
 								+ g.gameID + " 0><BR>\r\n";
 				}
 				body = body + "<GAMELISTEND>";

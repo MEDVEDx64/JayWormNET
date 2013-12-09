@@ -7,7 +7,7 @@ package org.themassacre.frywnet;
 public class FryWormNet {
 
 	static ConfigurationManager config;
-	public static final String version = "alpha-0.1";
+	public static final String version = "alpha-0.2";
 	
 	public static void main(String[] args) {
 		// Creating configuration storage
