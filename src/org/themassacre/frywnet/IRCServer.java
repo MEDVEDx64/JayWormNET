@@ -142,7 +142,7 @@ class User extends Thread {
 								sendln(":" + serverHost + " 433 " + body + " :Bad nickname");
 							else {
 								
-								if(getUserByNickName(nickFiltered) != null)
+								if(getUserByNickName(IRCServer.users, nickFiltered) != null)
 									sendln(":" + serverHost + " 433 " + nickFiltered + " :Nickname is already in use");
 								else
 									nickname = nickFiltered;
@@ -271,7 +271,7 @@ class User extends Thread {
 									sendEvent(401, target + " :No such nick/channel.");
 							}
 							else {
-								User u = getUserByNickName(target);
+								User u = getUserByNickName(IRCServer.users, target);
 								// If user doesn't exist
 								if(u == null)
 									sendEvent(401, target + " :No such nick/channel.");
@@ -280,7 +280,6 @@ class User extends Thread {
 									u.sendln(formatUserID() + " " + command + " " + target + " " + trailer);
 								}
 							}
-							Thread.sleep(1000); // throttle
 							
 						}
 					}
@@ -386,9 +385,9 @@ class User extends Thread {
 		return false;
 	}
 	
-	public static User getUserByNickName(String nickname) {
-		for(int i = 0; i < IRCServer.users.size(); i++) {
-			User found = IRCServer.users.get(i);
+	public static User getUserByNickName(ArrayList<User> users, String nickname) {
+		for(int i = 0; i < users.size(); i++) {
+			User found = users.get(i);
 			if(found.nickname.equalsIgnoreCase(nickname))
 				return found;
 		}

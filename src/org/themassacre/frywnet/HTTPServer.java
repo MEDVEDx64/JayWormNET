@@ -29,6 +29,7 @@ class HTTPServerException extends Exception {
 // HTTP server listening thread
 class HTTPServerListener extends Thread {
 	Socket socket;
+	boolean useSnooperFix = false;
 	
 	public HTTPServerListener(Socket s) {
 		this.socket = s;
@@ -116,6 +117,7 @@ class HTTPServerListener extends Thread {
 					body = body + "<MOTD>" + HTTPServer.MOTD + "</MOTD>";
 			}
 			else if(fileName.equalsIgnoreCase("RequestChannelScheme.asp")) {
+				useSnooperFix = true;
 				int chanIndex = Channel.indexOf(IRCServer.channels, params.get("Channel"));
 				if(chanIndex == -1) // if channel does not exist
 					body = "<SCHEME=Pf,Be>";
@@ -135,7 +137,8 @@ class HTTPServerListener extends Thread {
 					game.channel = params.get("Chan");
 					game.created = (int)(new Date().getTime()/1000);
 
-					game.hosterAddress = params.get("HostIP");
+					game.hosterAddress = HTTPServer.config.forceHosterIP?
+							socket.getInetAddress().toString().substring(1): params.get("HostIP");
 					game.hosterNickname = params.get("Nick");
 					
 					// Finally pushing it into the list
@@ -225,10 +228,10 @@ class HTTPServerListener extends Thread {
 		return "HTTP/1.0 " + code + (code < 300? " OK": " ERROR")
 				+ "\r\n" + headers + (mesg.length() == 0? "": ("\r\nContent-Length: " + (mesg.length())))
 				+ "\r\nConnection: close" + (mesg.length() == 0? "": "\r\n\r\n")
-				+ mesg + "\r\n";
+				+ mesg + ((useSnooperFix && HTTPServer.config.enableWheatSnooperSchemeFix)? "\n": "\r\n");
 	}
 	
-	final String headersXPoweredBy = "X-Powered-By: FryWormNET-INDEV/Java";
+	final String headersXPoweredBy = "X-Powered-By: FryWormNET-" + FryWormNet.version;
 	String headers = headersXPoweredBy;
 }
 

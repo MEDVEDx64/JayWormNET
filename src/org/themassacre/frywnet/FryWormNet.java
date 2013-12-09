@@ -16,6 +16,7 @@ public class FryWormNet {
 		// Initializing logging
 		WNLogger.start(config);
 		WNLogger.l.info("FryWormNET " + version);
+		WNLogger.l.info("Server hosthame is '" + config.serverHost + "'");
 		
 		// Starting servers
 		if(config.HTTPPort > 0)		new HTTPServer(config);

@@ -59,7 +59,6 @@ import org.themassacre.util.*;
 	public boolean		announceGameHosting		= false;
 	
 	// Various stuff
-	// TODO: implement these features:
 	public boolean		forceHosterIP				= false;
 	public boolean		enableSabotageProtection	= true;
 	public boolean		enableWheatSnooperSchemeFix	= true;
