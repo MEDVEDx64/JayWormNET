@@ -52,7 +52,7 @@ import org.themassacre.util.*;
 	
 	// Logging settings
 	public boolean		loggingEnabled	= true;
-	public String		loggingLevel	= "ALL";
+	public String		loggingLevel	= "FINER";
 	public String		logFile			= "wn.log";
 	
 	// IRC announcements options
