@@ -263,24 +263,28 @@ class User extends Thread {
 							String trailer = (body.indexOf(':') < 0 || body.indexOf(':') == body.length()-1)?
 									"": body.substring(body.indexOf(':'));
 							
-							// Is a channel?
-							if(target.charAt(0) == '#') {
-								if(IRCServer.isChannelExist(target.substring(1))) {
-									IRCServer.broadcast(formatUserID() + " " + command + " "
-											+ target + " " + trailer, target.substring(1), this);
-									WNLogger.l.finer(nickname + " <" + target + ">: " + trailer.substring(1));
-								}
-								else
-									sendEvent(401, target + " :No such nick/channel.");
-							}
+							if(target.length() == 0) // to avoid drop when nickname with incorrect characters requested
+								sendEvent(401, ":No such nick/channel.");
 							else {
-								User u = getUserByNickName(IRCServer.users, target);
-								// If user doesn't exist
-								if(u == null)
-									sendEvent(401, target + " :No such nick/channel.");
+								// Is a channel?
+								if(target.charAt(0) == '#') {
+									if(IRCServer.isChannelExist(target.substring(1))) {
+										IRCServer.broadcast(formatUserID() + " " + command + " "
+												+ target + " " + trailer, target.substring(1), this);
+										WNLogger.l.finer(nickname + " <" + target + ">: " + trailer.substring(1));
+									}
+									else
+										sendEvent(401, target + " :No such nick/channel.");
+								}
 								else {
-									WNLogger.l.fine(nickname + " <" + target + ">: " + trailer.substring(1));
-									u.sendln(formatUserID() + " " + command + " " + target + " " + trailer);
+									User u = getUserByNickName(IRCServer.users, target);
+									// If user doesn't exist
+									if(u == null)
+										sendEvent(401, target + " :No such nick/channel.");
+									else {
+										WNLogger.l.fine(nickname + " <" + target + ">: " + trailer.substring(1));
+										u.sendln(formatUserID() + " " + command + " " + target + " " + trailer);
+									}
 								}
 							}
 							
@@ -383,7 +387,8 @@ class User extends Thread {
 		String eventCode = String.valueOf(event);
 		while(eventCode.length() < 3)
 			eventCode = "0" + eventCode;
-		sendln(":" + IRCServer.config.serverHost + " " + eventCode + " " + nickname + " " + s);
+		sendln(":" + IRCServer.config.serverHost + " " + eventCode + " " + (nickname.length() == 0?
+				"<noname>": nickname) + " " + s);
 	}
 	
 	public boolean inAnyChannel() {
