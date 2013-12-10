@@ -109,8 +109,11 @@ class User extends Thread {
 					throw new Exception(addr + ": connection error.");
 				}
 				
-				String[] lines = (new String(bytes, IRCServer.config.charset)).trim().split("\n+");
-				WNLogger.l.finest("Input message: " + (new String(bytes, IRCServer.config.charset)).trim());
+				String[] lines = (IRCServer.config.charset.equals("native")? WACharTable.decode(bytes):
+					new String(bytes, IRCServer.config.charset)).trim().split("\n+");
+				WNLogger.l.finest("Input message: " + (IRCServer.config.charset.equals("native")?
+						WACharTable.decode(bytes):
+					new String(bytes, IRCServer.config.charset)).trim());
 				
 				for(int i = 0; i < lines.length; i++) {
 					String buffer = lines[i].trim();
@@ -364,9 +367,13 @@ class User extends Thread {
 	public void sendln(String s) {
 		if(socket != null) {
 			try {
-				out.write((s+"\r\n").getBytes(IRCServer.config.charset));
+				if(IRCServer.config.charset.equals("native"))
+					out.write(WACharTable.encode(s+"\r\n"));
+				else
+					out.write((s+"\r\n").getBytes(IRCServer.config.charset));
 				WNLogger.l.finest("Output message: " + s+"\r\n");
 			} catch(Exception e) {
+				e.printStackTrace();
 				WNLogger.l.warning("Failed to send a response: " + e);
 			}
 		}

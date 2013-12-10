@@ -1,3 +1,6 @@
+/*/ Part of FryWormNET source code. (C) 2013 Andrey Bobkov (MEDVEDx64).
+    Licensed under the Apache License, Version 2.0.  /*/
+
 package org.themassacre.frywnet;
 
 import java.io.*;

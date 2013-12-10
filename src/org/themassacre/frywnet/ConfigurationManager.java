@@ -26,10 +26,10 @@ import org.themassacre.util.*;
 	public String channelsFileName	= "channels.cfg";
 	
 	// IRC character encoding
-	public String charset			= "windows-1251";
+	public String charset			= "native";
 	
 	// IRC operator password
-	public String IRCOperPassword = "kenny";
+	public String IRCOperPassword	= "kenny";
 	
 	// Login messages configuration
 	public int showIntro = 2; 	// 2 shows full intro message,
