@@ -103,9 +103,9 @@ class User extends Thread {
 			do {
 				// Read from client
 				byte[] bytes = new byte[100000]; // it's potentially .. sux
-				in.read(bytes);
+				int bytesRead = in.read(bytes);
 				
-				if(bytes.length == 0) {
+				if(bytesRead <= 0) {
 					throw new Exception(addr + ": connection error.");
 				}
 				
