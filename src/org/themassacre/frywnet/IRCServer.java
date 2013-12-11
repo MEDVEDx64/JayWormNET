@@ -106,7 +106,7 @@ class User extends Thread {
 				int bytesRead = in.read(bytes);
 				
 				if(bytesRead <= 0) {
-					throw new Exception(addr + ": connection error.");
+					throw new Exception("disconnected");
 				}
 				
 				String[] lines = (IRCServer.config.charset.equals("native")? WACharTable.decode(bytes):
@@ -171,13 +171,7 @@ class User extends Thread {
 					}
 					
 					else if(command.equals("QUIT")) {
-						for(int z = 0; z < IRCServer.channels.length; z++) {
-							if(inChannel[z]) {
-								IRCServer.broadcast(formatUserID() + " QUIT :" + (body.length() == 0? "":
-									body.substring(1)), IRCServer.channels[z].name);
-								inChannel[z] = false;
-							}
-						}
+						quit((body.length() == 0? "": body.substring(1)));
 						socket.close();
 						socket = null;
 					}
@@ -343,7 +337,7 @@ class User extends Thread {
 			
 		} catch(Exception e) {
 			e.printStackTrace();
-			IRCServer.broadcast(formatUserID() + " QUIT :" + (quitMessage.length() == 0? e: quitMessage));
+			quit(quitMessage.length() == 0? e.getMessage(): quitMessage);
 			WNLogger.l.warning((quitMessage.length() == 0? e.toString(): quitMessage));
 			
 		} finally {
@@ -356,7 +350,7 @@ class User extends Thread {
 				}
 			}
 			
-			WNLogger.l.info((nickname.length() == 0? "<noname>": nickname) + " (" + addr + ") has disconnected.");
+			WNLogger.l.info(getNickname() + " (" + addr + ") has disconnected.");
 			
 			// Removing myself
 			if(IRCServer.users.contains(this))
@@ -364,8 +358,21 @@ class User extends Thread {
 		}
 	}
 	
+	public void quit(String reason) {
+		for(int z = 0; z < IRCServer.channels.length; z++) {
+			if(inChannel[z]) {
+				IRCServer.broadcast(formatUserID() + " QUIT :" + reason, IRCServer.channels[z].name);
+				inChannel[z] = false;
+			}
+		}
+	}
+	
 	public String formatUserID() {
 		return ":" + nickname + "!" + username + "@" + connectingFrom;
+	}
+	
+	public String getNickname() {
+		return (nickname.length() == 0? "<noname>": nickname);
 	}
 	
 	public void sendln(String s) {
@@ -387,8 +394,7 @@ class User extends Thread {
 		String eventCode = String.valueOf(event);
 		while(eventCode.length() < 3)
 			eventCode = "0" + eventCode;
-		sendln(":" + IRCServer.config.serverHost + " " + eventCode + " " + (nickname.length() == 0?
-				"<noname>": nickname) + " " + s);
+		sendln(":" + IRCServer.config.serverHost + " " + eventCode + " " + getNickname() + " " + s);
 	}
 	
 	public boolean inAnyChannel() {
