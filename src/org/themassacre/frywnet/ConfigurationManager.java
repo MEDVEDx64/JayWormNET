@@ -58,6 +58,12 @@ import org.themassacre.util.*;
 	// IRC announcements options
 	public boolean		announceGameHosting		= false;
 	
+	// Lists
+	public boolean		enableBanList			= true;
+	public boolean		enableWhiteList			= false;
+	public String		banListFileName			= "banlist.csv";
+	public String		whiteListFileName		= "whitelist.csv";
+	
 	// Various stuff
 	public boolean		forceHosterIP				= false;
 	public boolean		enableSabotageProtection	= true;

@@ -54,8 +54,49 @@ class User extends Thread {
 	public String	quitMessage = ""; // needed by PingWatcher
 	public boolean	isPingPassed = false; // please, avoid fake PONG messages!
 	
-	void login() {
+	void login() throws IOException {
 		ConfigurationManager c = IRCServer.config; // For shorter access
+		String addr = socket.getInetAddress().toString().substring(1);
+		
+		// Checking ban-list
+		if(IRCServer.config.enableBanList) {
+			if(!IRCServer.banlist.contains(nickname)) {
+				if(IRCServer.isIPInBanList(addr)) {
+					WNLogger.l.info("Kicked " + nickname + "(" + addr + "): banned user");
+					sendln("ERROR :You are banned from this server.");
+					socket.close(); socket = null;
+					return;
+				}
+			} else {
+				if(IRCServer.banlistIPs.get(IRCServer.banlist.indexOf(nickname)).contains(addr) ||
+						IRCServer.banlistIPs.get(IRCServer.banlist.indexOf(nickname)).contains("*")) {
+					WNLogger.l.info("Kicked " + nickname + "(" + addr + "): banned user");
+					sendln("ERROR :You are banned from this server.");
+					socket.close(); socket = null;
+					return;
+				}
+			}
+		}
+		
+		// Checking white-list
+		if(IRCServer.config.enableWhiteList) {
+			if(!IRCServer.whitelist.contains(nickname)) {
+				if(!IRCServer.isIPInWhiteList(addr)) {
+					WNLogger.l.info("Kicked " + nickname + ": not in white-list");
+					sendln("ERROR :You are not in white-list.");
+					socket.close(); socket = null;
+					return;
+				}
+			} else {
+				if(!IRCServer.whitelistIPs.get(IRCServer.whitelist.indexOf(nickname)).contains(addr) &&
+						!"*".equals(IRCServer.whitelistIPs.get(IRCServer.whitelist.indexOf(nickname)))) {
+					WNLogger.l.info("Kicked " + nickname + ": not in white-list (invalid IP)");
+					sendln("ERROR :You are not in white-list.");
+					socket.close(); socket = null;
+					return;
+				}
+			}
+		}
 		
 		WNLogger.l.info(nickname + " (" + socket.getInetAddress().toString().substring(1) + ") has logged in.");
 		if(c.showIntro > 0) sendEvent(1, ":Welcome, " + nickname + "!");
@@ -133,7 +174,7 @@ class User extends Thread {
 						
 						if(nickname.length() != 0)
 							sendln(":" + serverHost + " 400 :Nick change is not supported.");
-						else {
+						else {										
 							// Filtering nickname
 							String nickFiltered = "";
 							for(int z = 0; z < body.length(); z++) {
@@ -142,7 +183,7 @@ class User extends Thread {
 							}
 							
 							if(nickFiltered.length() == 0)
-								sendln(":" + serverHost + " 433 " + body + " :Bad nickname");
+								sendError(433, body + " :Bad nickname");
 							else {
 								
 								if(getUserByNickName(IRCServer.users, nickFiltered) != null)
@@ -172,8 +213,7 @@ class User extends Thread {
 					
 					else if(command.equals("QUIT")) {
 						quit((body.length() == 0? "": body.substring(1)));
-						socket.close();
-						socket = null;
+						break;
 					}
 					
 					else if(command.equals("JOIN")) {
@@ -365,6 +405,14 @@ class User extends Thread {
 				inChannel[z] = false;
 			}
 		}
+		
+		try {
+			socket.close();
+		} catch(IOException e) {
+			e.printStackTrace();
+			WNLogger.l.warning("quit(): " + e);
+		}
+		socket = null;
 	}
 	
 	public String formatUserID() {
@@ -390,11 +438,19 @@ class User extends Thread {
 		}
 	}
 	
-	public void sendEvent(int event, String s) {
+	String getEventCode(int event) {
 		String eventCode = String.valueOf(event);
 		while(eventCode.length() < 3)
 			eventCode = "0" + eventCode;
-		sendln(":" + IRCServer.config.serverHost + " " + eventCode + " " + getNickname() + " " + s);
+		return eventCode;
+	}
+	
+	public void sendEvent(int event, String s) {
+		sendln(":" + IRCServer.config.serverHost + " " + getEventCode(event) + " " + getNickname() + " " + s);
+	}
+	
+	public void sendError(int error, String s) {
+		sendln(":" + IRCServer.config.serverHost + " 433 " + s);
 	}
 	
 	public boolean inAnyChannel() {
@@ -427,6 +483,48 @@ public class IRCServer extends Thread {
 	public static ArrayList<User> users = new ArrayList<User>();
 	public static ConfigurationManager config;
 	
+	// Lists are read from csv, where first column is nickname, second — ip address.
+	public final static ArrayList<String> banlist = new ArrayList<String>();
+	public final static ArrayList<String> banlistIPs = new ArrayList<String>();
+	public final static ArrayList<String> whitelist = new ArrayList<String>();
+	public final static ArrayList<String> whitelistIPs = new ArrayList<String>();
+	
+	void readList(ArrayList<String> names, ArrayList<String> ips, String fileName) { 
+		try(BufferedReader in = new BufferedReader(new InputStreamReader(StreamUtils.getResourceAsStream(fileName, this)))) {
+			while(true) {
+				String buffer = in.readLine();
+				if(buffer == null) break;
+				
+				String[] row = buffer.split(",");
+				if(row == null) continue;
+				if(row.length < 2) continue;
+				names.add(row[0]);
+				ips.add(row[1]);
+			}
+			
+		} catch(FileNotFoundException eNF) {
+			WNLogger.l.warning("List file not found: " + fileName);
+		} catch(Exception e) {
+			e.printStackTrace();
+			WNLogger.l.warning("Can't read list file (" + fileName + "): " + e);
+		}
+	}
+	
+	static boolean isIPInList(String addr, ArrayList<String> list, ArrayList<String> listIPs) {
+		for(int i = 0; i < list.size(); i++)
+			if(list.get(i).contains("*") && listIPs.get(i).contains(addr))
+				return true;
+		return false;
+	}
+	
+	public static boolean isIPInWhiteList(String addr) {
+		return isIPInList(addr, whitelist, whitelistIPs);
+	}
+	
+	public static boolean isIPInBanList(String addr) {
+		return isIPInList(addr, banlist, banlistIPs);
+	}
+	
 	// Channels
 	public static Channel[] channels;
 	
@@ -455,6 +553,9 @@ public class IRCServer extends Thread {
 	
 	@Override public void run() {
 		if(config.ircShowMOTD) readMOTD();
+		// Reading ban-/white-list
+		if(config.enableBanList) readList(banlist, banlistIPs, config.banListFileName);
+		if(config.enableWhiteList) readList(whitelist, whitelistIPs, config.whiteListFileName);
 		try(ServerSocket ss = new ServerSocket(config.IRCPort)) {
 			while(true) {
 				try {
