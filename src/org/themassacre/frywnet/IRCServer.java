@@ -407,7 +407,8 @@ class User extends Thread {
 		}
 		
 		try {
-			socket.close();
+			if(socket != null)
+				socket.close();
 		} catch(IOException e) {
 			e.printStackTrace();
 			WNLogger.l.warning("quit(): " + e);
@@ -416,7 +417,8 @@ class User extends Thread {
 	}
 	
 	public String formatUserID() {
-		return ":" + nickname + "!" + username + "@" + connectingFrom;
+		return ":" + nickname + "!" + username + "@" + (IRCServer.config.useStealthIP?
+				IRCServer.config.stealthIP: connectingFrom);
 	}
 	
 	public String getNickname() {

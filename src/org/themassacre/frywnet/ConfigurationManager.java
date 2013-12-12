@@ -15,6 +15,9 @@ import org.themassacre.util.*;
 	public int HTTPPort		= 80;
 	public int IRCPort		= 6667;
 
+	public boolean	useStealthIP	= true;
+	public String	stealthIP		= "no.address.for.you";
+
 	// How long game should be kept in the list (in seconds)
 	public int gameLifeTime	= 240;
 	// IRC users pinging
