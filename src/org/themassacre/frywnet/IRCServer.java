@@ -202,10 +202,13 @@ class User extends Thread {
 						String[] splitted = body.split(":");
 						String[] prefix = splitted[0].trim().split(" +");
 						
-						username 	= prefix[0];
-						hostname 	= prefix[1];
-						servername 	= prefix[2];
-						realname	= splitted[1];
+						try {
+							username 	= prefix[0];
+							hostname 	= prefix[1];
+							servername 	= prefix[2];
+							realname	= splitted[1];
+						} catch(ArrayIndexOutOfBoundsException | NullPointerException e) {
+						}
 						
 						if(username.length() > 0)
 							login();
