@@ -86,16 +86,36 @@ class HTTPServerListener extends Thread {
 			// Validating request type
 			if(!received.get(0).startsWith("GET")) {
 				serveMessage = createResponse(500, "Only GET requests are supported");
-				throw new HTTPServerException("Bad request from client");
+				throw new HTTPServerException("Bad request");
 			}
 
 			// Parsing URL
-			URL url = new URL(received.get(0).split(" +")[1]);
-			String fileName = url.getFile();
+			String fileName = "";
+			String query = "";
+			
+			String[] splitted = received.get(0).split(" +");
+			if(splitted.length != 3)
+				throw new HTTPServerException("Bad request");
+			if(!splitted[2].startsWith("HTTP"))
+				throw new HTTPServerException("Bad request");
+			
+			if(HTTPServer.config.enableURLSpellCheck) {
+				URL url = new URL(splitted[1]);
+				fileName = url.getFile();
+				query = url.getQuery();
+			} else {
+				try {
+					String queryCut = splitted[1].substring(0, splitted[1].indexOf('?'));
+					fileName = queryCut.substring(queryCut.lastIndexOf('/'));
+					query = splitted[1].substring(splitted[1].indexOf('?') + 1, (splitted[1]+"#").indexOf('#'));
+				} catch(Exception e) {
+					throw new HTTPServerException("Invalid URL");
+				}
+			}
+			
 			// Finalizing
-			fileName = fileName.contains("?")? fileName.substring(0, fileName.indexOf("?")): fileName.substring(0);
+			fileName = fileName.contains("?")? fileName.substring(0, fileName.indexOf("?")): fileName;
 			fileName = fileName.contains("/")? fileName.split("/+")[fileName.split("/+").length-1]: fileName;
-			String query = url.getQuery();
 
 			// Creating parameters table
 			if(query != null) {
@@ -207,6 +227,7 @@ class HTTPServerListener extends Thread {
 		}
 		catch(Exception e) {
 			serveMessage = createResponse(500, "Internal server error");
+			e.printStackTrace();
 			WNLogger.l.warning(e.toString());
 
 		} finally {

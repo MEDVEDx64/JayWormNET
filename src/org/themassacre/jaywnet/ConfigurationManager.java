@@ -71,6 +71,7 @@ import org.themassacre.util.*;
 	public boolean		forceHosterIP				= false;
 	public boolean		enableSabotageProtection	= true;
 	public boolean		enableWheatSnooperSchemeFix	= true;
+	public boolean		enableURLSpellCheck			= false; // may be used to avoid snoopers join in
 
 	// 'cfgFileName' will be loaded automatically once
 	// ConfigurationManager is created
