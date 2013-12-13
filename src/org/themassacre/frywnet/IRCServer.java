@@ -265,31 +265,25 @@ class User extends Thread {
 					}
 					
 					else if(command.equals("MODE")) {
-						String target = body.substring(0, (body + " ").indexOf(' '));
-						// Does 'body' have anything after the last colon (or even that colon) — trailer?
-						if(body.lastIndexOf(':') < 0 || body.lastIndexOf(':') == body.length()-1)
+						String[] splitted = body.split(" +");
+						if(splitted.length != 1)
 							sendEvent(472, ":Sorry, you can't set modes for anything.");
 						else {
-							// String part after the colon
-							String trailer = body.substring(body.lastIndexOf(':')+1);
-							if(Channel.indexOf(channels, target) == -1) { // Maybe it's a nickname, not a channel?
-								User u = null;
-								for(int z = 0; z < IRCServer.users.size(); z++)
-									if(IRCServer.users.get(z).nickname.equals(target))
-										u = IRCServer.users.get(z);
-								
-								if(u == null)
-									sendEvent(401, target + " :No such nick/channel.");
-								else {
-									for(int c = 0; c < 256; c++)
+							try {
+								if(splitted[0].charAt(0) == '#' && IRCServer.isChannelExist(splitted[0].substring(1)))
+									sendEvent(324, splitted[0] + " +tn");
+								else if(getUserByNickName(IRCServer.users, splitted[0]) != null) {
+									String modeStr = "";
+									for(char c = 'a'; c < 'z'; c++)
 										if(modes[c])
-											trailer += (char)c;
-									sendEvent(324, target + " +" + trailer);
-											
-								}
-							} else
-								sendEvent(324, target + " +tn");
-						}
+											modeStr = modeStr + c;
+									sendEvent(324, splitted[0] + " +" + modeStr);
+								} else
+									sendEvent(401, splitted[0] + "  :No such nick/channel.");
+							} catch(Exception e) {
+								sendEvent(401, splitted[0] + "  :No such nick/channel.");
+							}
+						}	
 					}
 					
 					else if(command.equals("PRIVMSG") || command.equals("NOTICE")) {
