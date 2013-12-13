@@ -119,7 +119,7 @@ class User extends Thread {
 			for(int i = 0; i < IRCServer.users.size(); i++)
 				if(IRCServer.users.get(i).modes['o'])
 						ops++;
-			sendEvent(252, ops + " :IRC Operators online");
+			sendEvent(252, ops + " :IRC operators online");
 		}
 		
 		if(c.showChannelsCount)
@@ -159,7 +159,10 @@ class User extends Thread {
 				for(int i = 0; i < lines.length; i++) {
 					String buffer = lines[i].trim();
 					
-					if(buffer.length() == 0) continue;
+					if(buffer.length() == 0) {
+						sendEvent(421, ":Empty message");
+						continue;
+					}
 					
 					// Parsing
 					String command = buffer.toUpperCase().substring(0, (buffer + " ").indexOf(" "));
