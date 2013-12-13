@@ -2,3 +2,6 @@ bin
 build
 wn.log
 lib/*.jar
+*.csv
+*.cfg
+*.log

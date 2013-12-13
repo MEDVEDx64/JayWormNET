@@ -1,7 +1,7 @@
-/*/ Part of FryWormNET source code. (C) 2013 Andrey Bobkov (MEDVEDx64).
+/*/ Part of JayWormNET source code. (C) 2013 Andrey Bobkov (MEDVEDx64).
     Licensed under the Apache License, Version 2.0.  /*/
 
-package org.themassacre.frywnet;
+package org.themassacre.jaywnet;
 
 import java.io.*;
 import java.net.*;
@@ -16,11 +16,11 @@ class Game {
 
 class HTTPServerException extends Exception {
 	private static final long serialVersionUID = 185903561694370915L;
-	
+
 	public HTTPServerException() {
 		super();
 	}
-	
+
 	public HTTPServerException(String mesg) {
 		super(mesg);
 	}
@@ -30,30 +30,30 @@ class HTTPServerException extends Exception {
 class HTTPServerListener extends Thread {
 	Socket socket;
 	boolean useSnooperFix = false;
-	
+
 	public HTTPServerListener(Socket s) {
 		this.socket = s;
 	}
-	
+
 	public void run() {
 		// Message which will be sent back to server
 		String serveMessage = createResponse(200, "");
-		
+
 		// Lines, received from client
 		ArrayList<String> received = new ArrayList<String>();
-		
+
 		// Additional parameters (specified in URL)
 		//ArrayList<String[]> params = new ArrayList<String[]>();
 		Map<String, String> params = new HashMap<String, String>();
-		
+
 		// Client socket I/O streams
 		BufferedReader in;
 		OutputStream out = null;
-		
+
 		try {
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			out = socket.getOutputStream();
-			
+
 			// Reading from client
 			while(true) {
 				String buffer = in.readLine();
@@ -70,7 +70,7 @@ class HTTPServerListener extends Thread {
 				socket.close();
 				return;
 			}
-			
+
 			// Reconstructing message from array into a single buffer, only needed for "finest" logging
 			if(HTTPServer.config.loggingEnabled && Level.parse(HTTPServer.config.loggingLevel).intValue()
 					<= Level.FINEST.intValue()) {
@@ -88,7 +88,7 @@ class HTTPServerListener extends Thread {
 				serveMessage = createResponse(500, "Only GET requests are supported");
 				throw new HTTPServerException("Bad request from client");
 			}
-			
+
 			// Parsing URL
 			URL url = new URL(received.get(0).split(" +")[1]);
 			String fileName = url.getFile();
@@ -96,7 +96,7 @@ class HTTPServerListener extends Thread {
 			fileName = fileName.contains("?")? fileName.substring(0, fileName.indexOf("?")): fileName.substring(0);
 			fileName = fileName.contains("/")? fileName.split("/+")[fileName.split("/+").length-1]: fileName;
 			String query = url.getQuery();
-			
+
 			// Creating parameters table
 			if(query != null) {
 				String[] list = query.split("&");
@@ -107,9 +107,9 @@ class HTTPServerListener extends Thread {
 						params.put(row[0], row[1]);
 				}
 			}
-			
+
 			// HTTP response body
-			String body = "<NOTHING>";			
+			String body = "<NOTHING>";
 			if(fileName.equalsIgnoreCase("Login.asp")) {
 				body = "<CONNECT " + HTTPServer.config.serverHost + ">";
 				// Also, sending MOTD here
@@ -140,10 +140,10 @@ class HTTPServerListener extends Thread {
 					game.hosterAddress = HTTPServer.config.forceHosterIP?
 							socket.getInetAddress().toString().substring(1): params.get("HostIP");
 					game.hosterNickname = params.get("Nick");
-					
+
 					// Finally pushing it into the list
 					HTTPServer.games.add(game);
-					
+
 					// IRC game hosting announcement
 					if(HTTPServer.config.announceGameHosting)
 						IRCServer.broadcast(":" + HTTPServer.config.serverHost + " NOTICE #"
@@ -151,9 +151,9 @@ class HTTPServerListener extends Thread {
 					WNLogger.l.info("<#" + game.channel + "> " + game.hosterNickname + " hosting a game: " + game.name);
 					headers = headers + "\r\nSetGameId: : " + game.gameID;
 					body = "<NOTHING>";
-					
+
 				}
-				
+
 				else if(params.get("Cmd").equals("Close")) {
 					String gameName = "";
 					int gID = Integer.decode(params.get("GameID"));
@@ -166,22 +166,22 @@ class HTTPServerListener extends Thread {
 							found = true;
 							break;
 						}
-						
+
 						if(!found) {
 							throw new Exception("Trying to close a non-existant game with id " + gID);
 						}
-						
+
 						IRCServer.broadcast(":" + HTTPServer.config.serverHost + " NOTICE #"
 								+ params.get("Channel") + " :" + gameName + ": game has closed.", params.get("Channel"));
 						WNLogger.l.info("<#" + params.get("Channel") + "> " + gameName + ": game closed");
 					}
 				}
-				
+
 				else if(params.get("Cmd").equals("Failed"))
 					body = "<NOTHING>";
 				else throw new Exception("Unknown command (" + params.get("Cmd") + ")");
 			}
-			
+
 			else if(fileName.equalsIgnoreCase("GameList.asp")) {
 				HTTPServer.cleanUpGames();
 				body = /*body +*/"<GAMELISTSTART>\r\n";
@@ -197,7 +197,7 @@ class HTTPServerListener extends Thread {
 				// nothing
 			} else
 				throw new Exception("Invalid file specified: " + fileName);
-			
+
 			serveMessage = createResponse(200, body);
 
 		} catch(HTTPServerException eHTTP) {
@@ -208,7 +208,7 @@ class HTTPServerListener extends Thread {
 		catch(Exception e) {
 			serveMessage = createResponse(500, "Internal server error");
 			WNLogger.l.warning(e.toString());
-			
+
 		} finally {
 			// Sending response back to client
 			try {
@@ -223,15 +223,15 @@ class HTTPServerListener extends Thread {
 			}
 		}
 	}
-	
+
 	String createResponse(int code, String mesg) {
 		return "HTTP/1.0 " + code + (code < 300? " OK": " ERROR")
 				+ "\r\n" + headers + (mesg.length() == 0? "": ("\r\nContent-Length: " + (mesg.length())))
 				+ "\r\nConnection: close" + (mesg.length() == 0? "": "\r\n\r\n")
 				+ mesg + ((useSnooperFix && HTTPServer.config.enableWheatSnooperSchemeFix)? "\n": "\r\n");
 	}
-	
-	final String headersXPoweredBy = "X-Powered-By: FryWormNET-" + FryWormNet.version;
+
+	final String headersXPoweredBy = "X-Powered-By: JayWormNET-" + JayWormNet.version;
 	String headers = headersXPoweredBy;
 }
 
@@ -239,7 +239,7 @@ public class HTTPServer extends Thread {
 	public static ArrayList<Game> games = new ArrayList<Game>();
 	public static ConfigurationManager config;
 	public static String MOTD = "";
-	
+
 	void readMOTD() {
 		try(BufferedReader in = new BufferedReader(new InputStreamReader(
 				StreamUtils.getResourceAsStream(config.httpMOTDFileName, this)))) {
@@ -254,7 +254,7 @@ public class HTTPServer extends Thread {
 			MOTD = "[MOTD file has failed to read]";
 		}
 	}
-	
+
 	public static void cleanUpGames() {
 		for(int i = 0; i < games.size(); i++) {
 			// Killing 'too old' games
@@ -264,7 +264,7 @@ public class HTTPServer extends Thread {
 			}
 		}
 	}
-	
+
 	// HTTP server main thread
 	@Override public void run() {
 		if(config.httpShowMOTD) readMOTD();
@@ -292,11 +292,11 @@ public class HTTPServer extends Thread {
 			System.exit(-1);
 		}
 	}
-	
+
 	public HTTPServer(ConfigurationManager c) {
 		config = c;
 		this.start();
 		WNLogger.l.info("Starting HTTP server, listening on port " + config.HTTPPort);
 	}
-	
+
 }

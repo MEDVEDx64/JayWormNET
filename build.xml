@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project default="jar" name="build FryWormNET">
+<project default="jar" name="build JayWormNET">
 
 	<path id="libs">
 		<fileset dir="./lib/">
@@ -20,9 +20,9 @@
 
     <target name="jar" depends="compile">
 		<mkdir dir="./build/"/>
-        <jar destfile="./build/frywormnet.jar" filesetmanifest="mergewithoutmain">
+        <jar destfile="./build/jaywormnet.jar" filesetmanifest="mergewithoutmain">
             <manifest>
-                <attribute name="Main-Class" value="org.themassacre.frywnet.FryWormNet"/>
+                <attribute name="Main-Class" value="org.themassacre.jaywnet.JayWormNet"/>
                 <attribute name="Class-Path" value="."/>
             </manifest>
             <fileset dir="./bin"/>

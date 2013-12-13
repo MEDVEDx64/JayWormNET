@@ -1,4 +1,4 @@
-/*/ Part of FryWormNET source code. (C) 2013 Andrey Bobkov (MEDVEDx64).
+/*/ Part of JayWormNET source code. (C) 2013 Andrey Bobkov (MEDVEDx64).
     Licensed under the Apache License, Version 2.0.  /*/
 
 package org.themassacre.util;
@@ -19,22 +19,22 @@ public class WACharTable {
 		'\u00F3', '\u00F4', '\u00F5', '\u00F6', '\u00F7', '\u00F8', '\u00F9', '\u00FA', '\u00FB', '\u00FC', '\u00FD',
 		'\u00FE', '\u00FF'
 	};
-	
+
 	// From where waChars begins
 	private static final int first = 0x7f;
-	
+
 	public static char decode(byte ch) { // to Unicode
 		if(ch >= 0 && ch < first) return (char)ch;
-		return (waChars[256 + ch - first] == 0? (char)ch: waChars[256 + ch - first]); 
+		return (waChars[256 + ch - first] == 0? (char)ch: waChars[256 + ch - first]);
 	}
-	
+
 	public static byte encode(char ch) {
 		if(ch < first) return (byte)ch;
 		for(int x = 0; x < waChars.length; x++)
 			if(waChars[x] == ch) return (byte)(first+x);
 		return '?';
 	}
-	
+
 	public static String decode(byte[] bytes) {
 		StringBuffer buffer = new StringBuffer();
 		for(int i = 0; i < bytes.length; i++) {
@@ -43,7 +43,7 @@ public class WACharTable {
 		}
 		return buffer.toString();
 	}
-	
+
 	public static byte[] encode(String s) {
 		byte[] bytes = {};
 		for(int i = 0; i < s.length(); i++) {

@@ -1,7 +1,7 @@
-/*/ Part of FryWormNET source code. (C) 2013 Andrey Bobkov (MEDVEDx64).
+/*/ Part of JayWormNET source code. (C) 2013 Andrey Bobkov (MEDVEDx64).
     Licensed under the Apache License, Version 2.0.  /*/
 
-package org.themassacre.frywnet;
+package org.themassacre.jaywnet;
 
 // Using nProperty library to parse configuration file
 import jfork.nproperty.*;
@@ -24,16 +24,16 @@ import org.themassacre.util.*;
 	public boolean pingsEnabled		= true;
 	public int pingInterval			= 60;
 	public int pingTimeout			= 60;
-	
+
 	public String serverHost		= "heavie";
 	public String channelsFileName	= "channels.cfg";
-	
+
 	// IRC character encoding
 	public String charset			= "native";
-	
+
 	// IRC operator password
 	public String IRCOperPassword	= "kenny";
-	
+
 	// Login messages configuration
 	public int showIntro = 2; 	// 2 shows full intro message,
 								// 1 shows only "Welcome, username!"
@@ -46,32 +46,32 @@ import org.themassacre.util.*;
 	public String wallchopString = "WALLCHOPS PREFIX=(ov)@+ CHANTYPES=#& MAXCHANNELS=20"
 			+ "MAXBANS=25 NICKLEN=15 TOPICLEN=120 KICKLEN=90 NETWORK=EFnet"
 			+ "CHANMODES=b,k,l,imnpst MODES=4 :are supported by this server";
-	
+
 	// HTML MOTD
 	public boolean	ircShowMOTD			= true;
 	public boolean	httpShowMOTD		= true;
 	public String	ircMOTDFileName		= "motd.txt";
 	public String	httpMOTDFileName 	= "motd.html";
-	
+
 	// Logging settings
 	public boolean		loggingEnabled	= true;
 	public String		loggingLevel	= "FINER";
 	public String		logFile			= "wn.log";
-	
+
 	// IRC announcements options
 	public boolean		announceGameHosting		= false;
-	
+
 	// Lists
 	public boolean		enableBanList			= true;
 	public boolean		enableWhiteList			= false;
 	public String		banListFileName			= "banlist.csv";
 	public String		whiteListFileName		= "whitelist.csv";
-	
+
 	// Various stuff
 	public boolean		forceHosterIP				= false;
 	public boolean		enableSabotageProtection	= true;
 	public boolean		enableWheatSnooperSchemeFix	= true;
-	
+
 	// 'cfgFileName' will be loaded automatically once
 	// ConfigurationManager is created
 	public ConfigurationManager(String cfgFileName) {
@@ -85,5 +85,5 @@ import org.themassacre.util.*;
 					+ cfgFileName + "): " + e);
 		}
 	}
-	
+
 }

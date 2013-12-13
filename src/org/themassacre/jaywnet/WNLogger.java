@@ -1,7 +1,7 @@
-/*/ Part of FryWormNET source code. (C) 2013 Andrey Bobkov (MEDVEDx64).
+/*/ Part of JayWormNET source code. (C) 2013 Andrey Bobkov (MEDVEDx64).
     Licensed under the Apache License, Version 2.0.  /*/
 
-package org.themassacre.frywnet;
+package org.themassacre.jaywnet;
 
 import java.io.*;
 import java.util.Date;
@@ -25,10 +25,10 @@ class WNLogFormatter extends Formatter {
 				buffer.append(sym);
 			}
 		}
-		
+
 		return buffer.toString().replaceAll("\\p{C}", "?");
 	}
-	
+
 	@Override public String format(LogRecord rec) {
 		return filter("[" + new Date(rec.getMillis()) + " " + rec.getLevel()
 				+ "] " + (rec.getSourceClassName().contains("IRC") || rec.getSourceClassName().contains("User")?
@@ -41,19 +41,19 @@ public class WNLogger {
 	static boolean running = false;
 	static ConfigurationManager c = null;
 	public static Logger l = null;
-	
+
 	public static void start(ConfigurationManager config) {
 		if(running) return;
 		c = config;
 		l = Logger.getLogger("wnl");
 		l.setLevel(Level.parse(c.loggingLevel));
-		
+
 		// Resetting log formatter for console output, etc.
 		l.setUseParentHandlers(false);
 		ConsoleHandler conHandler = new ConsoleHandler();
 		conHandler.setFormatter(new WNLogFormatter());
 		l.addHandler(conHandler);
-		
+
 		if(!c.loggingEnabled) return;
 		// Setting up log file
 		try {

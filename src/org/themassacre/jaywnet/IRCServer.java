@@ -1,7 +1,7 @@
-/*/ Part of FryWormNET source code. (C) 2013 Andrey Bobkov (MEDVEDx64).
+/*/ Part of JayWormNET source code. (C) 2013 Andrey Bobkov (MEDVEDx64).
     Licensed under the Apache License, Version 2.0.  /*/
 
-package org.themassacre.frywnet;
+package org.themassacre.jaywnet;
 
 import org.themassacre.util.*;
 import java.net.ServerSocket;
@@ -14,29 +14,29 @@ class Channel {
 	public String name = null;
 	public String scheme = "Pf,Be";
 	public String topic = "";
-	
+
 	public Channel(String name) {
 		this.name = name;
 	}
-	
+
 	public Channel(String name, String scheme, String topic) {
 		this.name = name;
 		this.scheme = scheme;
 		this.topic = topic;
 	}
-	
+
 	// Returns index of a channel in Channels array by it's name
 	public static int indexOf(Channel[] channels, String chName) {
 		for(int i = 0; i < channels.length; i++) {
 			if(channels[i].name.equals(chName)) return i;
 		}
-		
+
 		return -1;
 	}
 }
 
 class User extends Thread {
-	public String 
+	public String
 		connectingFrom = "",
 		nickname  = "",
 		username = "",
@@ -46,18 +46,18 @@ class User extends Thread {
 	public Socket socket;
 	public boolean[] inChannel;
 	public boolean[] modes = new boolean[256];
-	
+
 	// Client socket I/O streams
 	InputStream in = null;
 	OutputStream out = null;
-	
+
 	public String	quitMessage = ""; // needed by PingWatcher
 	public boolean	isPingPassed = false; // please, avoid fake PONG messages!
-	
+
 	void login() throws IOException {
 		ConfigurationManager c = IRCServer.config; // For shorter access
 		String addr = socket.getInetAddress().toString().substring(1);
-		
+
 		// Checking ban-list
 		if(IRCServer.config.enableBanList) {
 			if(!IRCServer.banlist.contains(nickname)) {
@@ -77,7 +77,7 @@ class User extends Thread {
 				}
 			}
 		}
-		
+
 		// Checking white-list
 		if(IRCServer.config.enableWhiteList) {
 			if(!IRCServer.whitelist.contains(nickname)) {
@@ -97,23 +97,23 @@ class User extends Thread {
 				}
 			}
 		}
-		
+
 		WNLogger.l.info(nickname + " (" + socket.getInetAddress().toString().substring(1) + ") has logged in.");
 		if(c.showIntro > 0) sendEvent(1, ":Welcome, " + nickname + "!");
 		if(c.showIntro > 1) {
-			sendEvent(11, ":FryWormNET " + FryWormNet.version + " IRC emulator");
+			sendEvent(11, ":JayWormNET " + JayWormNet.version + " IRC emulator");
 			sendEvent(11, ":Based on CyberShadow's MyWormNET code");
 			sendEvent(11, ":with some of StepS' improvements;");
 			sendEvent(11, ":Rewrite in Java by MEDVEDx64.");
-					
-			sendEvent(2, ":Your host is " + IRCServer.config.serverHost + ", running FryWormNET " + FryWormNet.version);
+
+			sendEvent(2, ":Your host is " + IRCServer.config.serverHost + ", running JayWormNET " + JayWormNet.version);
 		}
-		
+
 		if(c.showCreated)				sendEvent(3, ":This server was created " + IRCServer.created);
 		if(c.showPlayersCount)			sendEvent(251, ":There are " + IRCServer.users.size() + " users on the server.");
 		if(c.wallchopString != null && c.showChops)
 			sendEvent(5, c.wallchopString);
-		
+
 		if(c.showOps) {
 			int ops = 0;
 			for(int i = 0; i < IRCServer.users.size(); i++)
@@ -121,10 +121,10 @@ class User extends Thread {
 						ops++;
 			sendEvent(252, ops + " :IRC operators online");
 		}
-		
+
 		if(c.showChannelsCount)
 			sendEvent(254, IRCServer.channels.length + " :pre-defined channels");
-		
+
 		if(c.ircShowMOTD && IRCServer.motdLines != null) {
 			sendEvent(375, ":- " + c.serverHost + " Message of the Day - ");
 			for(int i = 0; i < IRCServer.motdLines.length; i++)
@@ -132,63 +132,63 @@ class User extends Thread {
 			sendEvent(376, ":End of /MOTD command.");
 		}
 	}
-	
+
 	@Override public void run() {
 		// For shorter access
 		final String serverHost = IRCServer.config.serverHost;
 		final Channel[] channels = IRCServer.channels;
 		String addr = socket.getInetAddress().toString().substring(1);
-		
+
 		try {
-			
+
 			do {
 				// Read from client
 				byte[] bytes = new byte[100000]; // it's potentially .. sux
 				int bytesRead = in.read(bytes);
-				
+
 				if(bytesRead <= 0) {
 					throw new Exception("disconnected");
 				}
-				
+
 				String[] lines = (IRCServer.config.charset.equals("native")? WACharTable.decode(bytes):
 					new String(bytes, IRCServer.config.charset)).trim().split("\n+");
 				WNLogger.l.finest("Input message: " + (IRCServer.config.charset.equals("native")?
 						WACharTable.decode(bytes):
 					new String(bytes, IRCServer.config.charset)).trim());
-				
+
 				for(int i = 0; i < lines.length; i++) {
 					String buffer = lines[i].trim();
-					
+
 					if(buffer.length() == 0) {
 						sendEvent(421, ":Empty message");
 						continue;
 					}
-					
+
 					// Parsing
 					String command = buffer.toUpperCase().substring(0, (buffer + " ").indexOf(" "));
 					String body = buffer.contains(" ")? buffer.substring(command.length() + 1): "";
-					
+
 					if(command.equals("PING"))
 						sendln("PONG " + (body.indexOf(':') < 0? ":" + serverHost: body.substring(body.indexOf(':'))));
 					else if(command.equals("PONG")) {
 						isPingPassed = true;
 					} else if(command.equals("PASS")) { // ignore
 					} else if(command.equals("NICK")) {
-						
+
 						if(nickname.length() != 0)
 							sendln(":" + serverHost + " 400 :Nick change is not supported.");
-						else {										
+						else {
 							// Filtering nickname
 							String nickFiltered = "";
 							for(int z = 0; z < body.length(); z++) {
 								if(IRCServer.validNickChars.indexOf(body.charAt(z)) >= 0)
 									nickFiltered += body.charAt(z);
 							}
-							
+
 							if(nickFiltered.length() == 0)
 								sendError(433, body + " :Bad nickname");
 							else {
-								
+
 								if(getUserByNickName(IRCServer.users, nickFiltered) != null)
 									sendln(":" + serverHost + " 433 " + nickFiltered + " :Nickname is already in use");
 								else
@@ -197,14 +197,14 @@ class User extends Thread {
 									login();
 							}
 						}
-						
+
 					}
-					
+
 					else if(command.equals("USER")) {
 						// USER username hostname servername :40 0 RO
 						String[] splitted = body.split(":");
 						String[] prefix = splitted[0].trim().split(" +");
-						
+
 						try {
 							username 	= prefix[0];
 							hostname 	= prefix[1];
@@ -212,19 +212,19 @@ class User extends Thread {
 							realname	= splitted[1];
 						} catch(ArrayIndexOutOfBoundsException | NullPointerException e) {
 						}
-						
+
 						if(username.length() > 0)
 							login();
 					}
-					
+
 					else if(command.equals("QUIT")) {
 						quit((body.length() == 0? "": body.substring(1)));
 						break;
 					}
-					
+
 					else if(command.equals("JOIN")) {
 						String chName = body.charAt(0) == '#'? body.substring(1): body;
-						
+
 						if(nickname.length() == 0)
 							sendln(":" + serverHost + " 451 :Register first.");
 						else if(Channel.indexOf(channels, chName) == -1)
@@ -233,14 +233,14 @@ class User extends Thread {
 							sendln(":" + serverHost + " 403 " + nickname + " " + body
 									+ " :You already are in channel " + body);
 						} else {
-							
+
 							WNLogger.l.info(nickname + " has joined #" + chName);
 							inChannel[Channel.indexOf(channels, chName)] = true;
 							IRCServer.broadcast(formatUserID() + " JOIN :" + body, chName);
 							if(modes['o'])
 								IRCServer.broadcast(":" + serverHost + " MODE "
 										+ body + " +o " + nickname, chName);
-							
+
 							String response = ":" + serverHost + " 353 " + nickname + " = "
 									+ body + " :";
 							for(int z = 0; z < IRCServer.users.size(); z++) {
@@ -253,10 +253,10 @@ class User extends Thread {
 							}
 							sendln(response);
 							sendEvent(336, body + " :End of /NAMES list.");
-							
+
 						}
 					}
-					
+
 					else if(command.equals("PART")) {
 						String chName = body.charAt(0) == '#'? body.substring(1): body;
 						if(Channel.indexOf(channels, chName) != -1)
@@ -266,7 +266,7 @@ class User extends Thread {
 								inChannel[Channel.indexOf(channels, chName)] = false;
 							}
 					}
-					
+
 					else if(command.equals("MODE")) {
 						String[] splitted = body.split(" +");
 						if(splitted.length != 1)
@@ -286,9 +286,9 @@ class User extends Thread {
 							} catch(Exception e) {
 								sendEvent(401, splitted[0] + "  :No such nick/channel.");
 							}
-						}	
+						}
 					}
-					
+
 					else if(command.equals("PRIVMSG") || command.equals("NOTICE")) {
 						if(nickname.length() == 0)
 							sendln(":" + serverHost + " 451 :Register first.");
@@ -296,7 +296,7 @@ class User extends Thread {
 							String target = body.substring(0, (body + " ").indexOf(' '));
 							String trailer = (body.indexOf(':') < 0 || body.indexOf(':') == body.length()-1)?
 									"": body.substring(body.indexOf(':'));
-							
+
 							if(target.length() == 0) // to avoid drop when nickname with incorrect characters requested
 								sendEvent(401, ":No such nick/channel.");
 							else {
@@ -321,14 +321,14 @@ class User extends Thread {
 									}
 								}
 							}
-							
+
 						}
 					}
-					
+
 					else if(command.equals("OPER")) {
 						String[] splitted = body.split(" +");
 						String operPw = splitted.length > 1? splitted[1]: splitted[0];
-						
+
 						if(operPw.equals(IRCServer.config.IRCOperPassword)) {
 							WNLogger.l.info(nickname + " (" + addr + ") has registered as operator");
 							modes['o'] = true;
@@ -339,7 +339,7 @@ class User extends Thread {
 											+ nickname, channels[z].name);
 						}
 					}
-					
+
 					else if(command.equals("WHO")) {
 						for(int z = 0; z < IRCServer.users.size(); z++) {
 							User u = IRCServer.users.get(z);
@@ -356,7 +356,7 @@ class User extends Thread {
 						}
 						sendEvent(315, "* :End of /WHO list.");
 					}
-					
+
 					else if(command.equals("LIST")) { // List of channels with users count values
 						sendEvent(321, "Channel :Users  Name");
 						for(int z = 0; z < channels.length; z++) {
@@ -367,19 +367,19 @@ class User extends Thread {
 							sendEvent(322, "#" + channels[z].name + " " + usersInChannel + " :" + channels[z].topic);
 						}
 						sendEvent(323, ":End of /LIST");
-						
+
 					}
-					
+
 					else sendEvent(421, command + " :Unknown command");
 				}
-										
+
 			} while(socket != null);
-			
+
 		} catch(Exception e) {
 			e.printStackTrace();
 			quit(quitMessage.length() == 0? e.getMessage(): quitMessage);
 			WNLogger.l.warning((quitMessage.length() == 0? e.toString(): quitMessage));
-			
+
 		} finally {
 			if(socket != null) {
 				try {
@@ -389,15 +389,15 @@ class User extends Thread {
 					e.printStackTrace();
 				}
 			}
-			
+
 			WNLogger.l.info(getNickname() + " (" + addr + ") has disconnected.");
-			
+
 			// Removing myself
 			if(IRCServer.users.contains(this))
 				IRCServer.users.remove(this);
 		}
 	}
-	
+
 	public void quit(String reason) {
 		for(int z = 0; z < IRCServer.channels.length; z++) {
 			if(inChannel[z]) {
@@ -405,7 +405,7 @@ class User extends Thread {
 				inChannel[z] = false;
 			}
 		}
-		
+
 		try {
 			if(socket != null)
 				socket.close();
@@ -415,16 +415,16 @@ class User extends Thread {
 		}
 		socket = null;
 	}
-	
+
 	public String formatUserID() {
 		return ":" + nickname + "!" + username + "@" + (IRCServer.config.useStealthIP?
 				IRCServer.config.stealthIP: connectingFrom);
 	}
-	
+
 	public String getNickname() {
 		return (nickname.length() == 0? "<noname>": nickname);
 	}
-	
+
 	public void sendln(String s) {
 		if(socket != null) {
 			try {
@@ -439,28 +439,28 @@ class User extends Thread {
 			}
 		}
 	}
-	
+
 	String getEventCode(int event) {
 		String eventCode = String.valueOf(event);
 		while(eventCode.length() < 3)
 			eventCode = "0" + eventCode;
 		return eventCode;
 	}
-	
+
 	public void sendEvent(int event, String s) {
 		sendln(":" + IRCServer.config.serverHost + " " + getEventCode(event) + " " + getNickname() + " " + s);
 	}
-	
+
 	public void sendError(int error, String s) {
 		sendln(":" + IRCServer.config.serverHost + " 433 " + s);
 	}
-	
+
 	public boolean inAnyChannel() {
 		for(int i = 0; i < IRCServer.channels.length; i++)
 			if(inChannel[i]) return true;
 		return false;
 	}
-	
+
 	public static User getUserByNickName(ArrayList<User> users, String nickname) {
 		for(int i = 0; i < users.size(); i++) {
 			User found = users.get(i);
@@ -469,7 +469,7 @@ class User extends Thread {
 		}
 		return null;
 	}
-	
+
 	public User() {
 		inChannel = new boolean[IRCServer.channels.length];
 		if(IRCServer.config.pingsEnabled)
@@ -480,30 +480,30 @@ class User extends Thread {
 public class IRCServer extends Thread {
 	final static String validNickChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`_-|";
 	final static Date created = new Date();
-	
+
 	// IRC user list
 	public static ArrayList<User> users = new ArrayList<User>();
 	public static ConfigurationManager config;
-	
+
 	// Lists are read from csv, where first column is nickname, second — ip address.
 	public final static ArrayList<String> banlist = new ArrayList<String>();
 	public final static ArrayList<String> banlistIPs = new ArrayList<String>();
 	public final static ArrayList<String> whitelist = new ArrayList<String>();
 	public final static ArrayList<String> whitelistIPs = new ArrayList<String>();
-	
-	void readList(ArrayList<String> names, ArrayList<String> ips, String fileName) { 
+
+	void readList(ArrayList<String> names, ArrayList<String> ips, String fileName) {
 		try(BufferedReader in = new BufferedReader(new InputStreamReader(StreamUtils.getResourceAsStream(fileName, this)))) {
 			while(true) {
 				String buffer = in.readLine();
 				if(buffer == null) break;
-				
+
 				String[] row = buffer.split(",");
 				if(row == null) continue;
 				if(row.length < 2) continue;
 				names.add(row[0]);
 				ips.add(row[1]);
 			}
-			
+
 		} catch(FileNotFoundException eNF) {
 			WNLogger.l.warning("List file not found: " + fileName);
 		} catch(Exception e) {
@@ -511,29 +511,29 @@ public class IRCServer extends Thread {
 			WNLogger.l.warning("Can't read list file (" + fileName + "): " + e);
 		}
 	}
-	
+
 	static boolean isIPInList(String addr, ArrayList<String> list, ArrayList<String> listIPs) {
 		for(int i = 0; i < list.size(); i++)
 			if(list.get(i).contains("*") && listIPs.get(i).contains(addr))
 				return true;
 		return false;
 	}
-	
+
 	public static boolean isIPInWhiteList(String addr) {
 		return isIPInList(addr, whitelist, whitelistIPs);
 	}
-	
+
 	public static boolean isIPInBanList(String addr) {
 		return isIPInList(addr, banlist, banlistIPs);
 	}
-	
+
 	// Channels
 	public static Channel[] channels;
-	
+
 	public static boolean isChannelExist(String chName) {
 		return (Channel.indexOf(IRCServer.channels, chName) == -1)? false: true;
 	}
-	
+
 	// MOTD
 	public static String[] motdLines = null;
 	public void readMOTD() {
@@ -552,7 +552,7 @@ public class IRCServer extends Thread {
 			motdLines[0] = "[MOTD file has failed to read]";
 		}
 	}
-	
+
 	@Override public void run() {
 		if(config.ircShowMOTD) readMOTD();
 		// Reading ban-/white-list
@@ -564,7 +564,7 @@ public class IRCServer extends Thread {
 					Socket socket = ss.accept();
 					WNLogger.l.info("connection established " + socket.getInetAddress()
 							.toString().substring(1));
-					
+
 					// Registering a user
 					User u = new User();
 					u.socket = socket;
@@ -575,10 +575,10 @@ public class IRCServer extends Thread {
 
 					u.in = socket.getInputStream();
 					u.out = socket.getOutputStream();
-					
+
 					users.add(u);
 					u.start();
-					
+
 				} catch(Exception e) {
 					WNLogger.l.severe("Failed to register a user: " + e);
 					e.printStackTrace();
@@ -596,7 +596,7 @@ public class IRCServer extends Thread {
 			System.exit(-1);
 		}
 	}
-	
+
 	// Send line to all users
 	public static void broadcast(String s) {
 		for(int i = 0; i < users.size(); i++) {
@@ -604,7 +604,7 @@ public class IRCServer extends Thread {
 				users.get(i).sendln(s);
 		}
 	}
-	
+
 	// Send line to anybody but self
 	public static void broadcast(String s, User sender) {
 		for(int i = 0; i < users.size(); i++) {
@@ -613,7 +613,7 @@ public class IRCServer extends Thread {
 				users.get(i).sendln(s);
 		}
 	}
-	
+
 	// Send to channel
 	public static void broadcast(String s, String chName) {
 		// Channel existence check
@@ -623,7 +623,7 @@ public class IRCServer extends Thread {
 				users.get(i).sendln(s);
 		}
 	}
-	
+
 	public static void broadcast(String s, String chName, User sender) {
 		// Channel existence check
 		if(Channel.indexOf(channels, chName) == -1) return;
@@ -633,14 +633,14 @@ public class IRCServer extends Thread {
 				users.get(i).sendln(s);
 		}
 	}
-	
+
 	public IRCServer(ConfigurationManager c) {
 		config = c;
 		channels = readChannelsFromFile(config.channelsFileName);
 		this.start();
 		WNLogger.l.info("Starting IRC server, listening on port " + config.IRCPort);
 	}
-	
+
 	public Channel[] readChannelsFromFile(String fileName) {
 		ArrayList<Channel> channels = new ArrayList<Channel>();
 		try(BufferedReader in = new BufferedReader(new InputStreamReader(
@@ -650,30 +650,30 @@ public class IRCServer extends Thread {
 				String line = in.readLine();
 				if(line == null) break;
 				if(line.length() == 0) break;
-				
+
 				// Manual parsing
 				StringBuffer chName = new StringBuffer();
 				StringBuffer chScheme = new StringBuffer();
 				int location = 0; int index = 0;
 				for(index = 0; index < line.length(); index++) {
 					if(location > 1) break;
-					
+
 					if(line.charAt(index) == ':') {
 						location++;
 						continue;
 					}
-					
+
 					(location == 0? chName: chScheme).ensureCapacity(index+2);
 					(location == 0? chName: chScheme).append(line.charAt(index));
 				}
-				
+
 				// Avoiding duplicates
 				if(channels.contains(chName)) continue;
 				// Adding
 				channels.add(new Channel(chName.toString(), chScheme.toString().length() == 0? "Pf,Be":
 						chScheme.toString(), (location > 1? line.substring(index): "")));
 			}
-			
+
 		} catch(Exception e) {
 			//System.err.println(e);
 			e.printStackTrace();
@@ -689,13 +689,13 @@ class UserWatcher extends Thread {
 	private int timer = 0;
 	private User user = null;
 	private int interval, timeout;
-	
+
 	public UserWatcher(User u, ConfigurationManager c) {
 		user		= u;
 		interval	= c.pingInterval;
 		timeout		= c.pingTimeout;
 	}
-	
+
 	@Override public void run() {
 		while(true) {
 			try {
@@ -704,20 +704,20 @@ class UserWatcher extends Thread {
 			catch(InterruptedException e) {
 				e.printStackTrace();
 			}
-			
+
 			timer++;
-			
+
 			if(user.isPingPassed) {
 				timer = 0;
 				user.isPingPassed = false;
 				user.quitMessage = "";
 			}
-			
+
 			if(timer == interval)
 				user.sendln("PING :beep!");
 			if(timer == interval + timeout) {
 				user.quitMessage = "Ping timeout: " + timeout;
-				
+
 				if(user.socket == null)
 					break;
 				else {
@@ -727,7 +727,7 @@ class UserWatcher extends Thread {
 						e.printStackTrace();
 					}
 				}
-				
+
 				user.socket = null;
 			}
 		}
