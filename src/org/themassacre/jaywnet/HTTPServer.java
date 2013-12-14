@@ -170,7 +170,9 @@ class HTTPServerListener extends Thread {
 								+ game.channel +  " :" + game.hosterNickname + " hosting a game: " + game.name, game.channel);
 					WNLogger.l.info("<#" + game.channel + "> " + game.hosterNickname + " hosting a game: " + game.name);
 					headers = headers + "\r\nSetGameId: : " + game.gameID;
-					body = "<NOTHING>";
+					body = "<html><head><title>Object moved</title></head><body><h1>Object moved</h1>This object may be "
+							+ "found <a href=\"/wormageddonweb/GameList.asp?Channel=" + game.channel
+							+ "\">here</a>.</body></html>";
 
 				}
 
