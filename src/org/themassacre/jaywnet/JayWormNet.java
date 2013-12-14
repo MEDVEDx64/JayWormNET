@@ -7,7 +7,7 @@ package org.themassacre.jaywnet;
 public class JayWormNet {
 
 	static ConfigurationManager config;
-	public static final String version = "alpha-0.6";
+	public static final String version = "alpha-0.7";
 
 	public static void main(String[] args) {
 		// Creating configuration storage

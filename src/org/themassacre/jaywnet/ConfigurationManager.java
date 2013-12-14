@@ -26,7 +26,7 @@ import org.themassacre.util.*;
 	public int pingTimeout			= 60;
 
 	public String serverHost		= "heavie";
-	public String channelsFileName	= "channels.cfg";
+	public String channelsFileName	= "channels.lst";
 
 	// IRC character encoding
 	public String charset			= "native";
@@ -54,7 +54,7 @@ import org.themassacre.util.*;
 	public String	httpMOTDFileName 	= "motd.html";
 
 	// Logging settings
-	public boolean		loggingEnabled	= true;
+	public boolean		loggingEnabled	= false;
 	public String		loggingLevel	= "FINER";
 	public String		logFile			= "wn.log";
 
