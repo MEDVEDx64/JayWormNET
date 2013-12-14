@@ -327,16 +327,25 @@ class User extends Thread {
 
 					else if(command.equals("OPER")) {
 						String[] splitted = body.split(" +");
-						String operPw = splitted.length > 1? splitted[1]: splitted[0];
-
-						if(operPw.equals(IRCServer.config.IRCOperPassword)) {
-							WNLogger.l.info(nickname + " (" + addr + ") has registered as operator");
-							modes['o'] = true;
-							sendln(":" + nickname + " MODE " + nickname + " :+o");
-							for(int z = 0; z < channels.length; z++)
-								if(inChannel[z])
-									IRCServer.broadcast(":" + serverHost + " MODE " + channels[z].name + " +o "
-											+ nickname, channels[z].name);
+						try {
+							String operPw = splitted[0];
+							if(operPw.trim().length() == 0)
+								throw new Exception("Not enough params");
+	
+							if(operPw.equals(IRCServer.config.IRCOperPassword)) {
+								WNLogger.l.info(nickname + " (" + addr + ") has registered as operator");
+								modes['o'] = true;
+								sendln(":" + nickname + " MODE " + nickname + " :+o");
+								for(int z = 0; z < channels.length; z++)
+									if(inChannel[z])
+										IRCServer.broadcast(":" + serverHost + " MODE " + channels[z].name + " +o "
+												+ getNickname(), channels[z].name);
+							} else {
+								sendError(464, ":Bad password");
+								WNLogger.l.info(getNickname() + ": unsuccessful attempt to register as operator");
+							}
+						} catch (Exception e) {
+							sendError(461, ":Need more parameters");
 						}
 					}
 
