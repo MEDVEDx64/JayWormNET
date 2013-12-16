@@ -3,13 +3,62 @@
 
 package org.themassacre.jaywnet;
 
+import java.awt.GraphicsEnvironment;
 import java.io.*;
 import java.util.Date;
 import java.util.logging.*;
+import javax.swing.*;
+
+class GUIHandler extends Handler {
+	private JFrame frame;
+	private JTextArea text;
+	private StringWriter writer;
+	private PrintWriter out;
+	
+	public GUIHandler() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override public void run() {
+				frame = new JFrame("JayWormNET " + JayWormNet.version);
+				text  = new JTextArea();
+				text.setVisible(true);
+				text.setEditable(false);
+				
+				JScrollPane scroll = new JScrollPane(text, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+						JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+				
+				frame.setSize(800, 512);
+				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+				frame.add(scroll);
+				frame.setVisible(true);
+				
+				writer = new StringWriter();
+				out = new PrintWriter(writer);
+			}
+		});
+	}
+	
+	@Override public void publish(final LogRecord rec) {
+		final Formatter fmt = this.getFormatter();
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override public void run() {
+				out.println(fmt.format(rec));
+				text.setText(writer.toString());
+			}
+		});
+	}
+	
+	@Override public void flush() {
+		out.flush();
+	}
+	
+	@Override public void close() {
+		out.close();
+	}
+}
 
 class WNLogFormatter extends Formatter {
 	// Filtering for non-printable characters
-	private static String filter(String s) {
+	protected static String filter(String s) {
 		StringBuffer buffer = new StringBuffer();
 		for(int i = 0; i < s.length(); i++) {
 			String sym = s.charAt(i) == '\n'? "\\n":
@@ -36,6 +85,13 @@ class WNLogFormatter extends Formatter {
 	}
 }
 
+class SimplifiedWNLogFormatter extends WNLogFormatter {
+	@Override public String format(LogRecord rec) {
+		return filter("[" + new Date(rec.getMillis()) + " " + rec.getLevel()
+				+ "] " + rec.getMessage());
+	}
+}
+
 // Logging service
 public class WNLogger {
 	static boolean running = false;
@@ -54,6 +110,13 @@ public class WNLogger {
 		conHandler.setFormatter(new WNLogFormatter());
 		l.addHandler(conHandler);
 
+		// Checking if graphics available and creating GUI form
+		if(!GraphicsEnvironment.isHeadless()) {
+			GUIHandler h = new GUIHandler();
+			h.setFormatter(new SimplifiedWNLogFormatter());
+			l.addHandler(h);
+		}
+		
 		if(!c.loggingEnabled) return;
 		// Setting up log file
 		try {
