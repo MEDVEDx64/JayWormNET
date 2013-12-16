@@ -102,7 +102,6 @@ public class WNLogger {
 		if(running) return;
 		c = config;
 		l = Logger.getLogger("wnl");
-		l.setLevel(Level.parse(c.loggingLevel));
 
 		// Resetting log formatter for console output, etc.
 		l.setUseParentHandlers(false);
@@ -111,13 +110,16 @@ public class WNLogger {
 		l.addHandler(conHandler);
 
 		// Checking if graphics available and creating GUI form
-		if(!GraphicsEnvironment.isHeadless()) {
+		if(!GraphicsEnvironment.isHeadless() && c.enableGUI && !JayWormNet.forceNoGUI) {
 			GUIHandler h = new GUIHandler();
 			h.setFormatter(new SimplifiedWNLogFormatter());
 			l.addHandler(h);
 		}
 		
-		if(!c.loggingEnabled) return;
+		if(!c.loggingEnabled) {
+			l.setLevel(Level.parse(c.loggingLevel));
+			return;
+		}
 		// Setting up log file
 		try {
 			FileHandler fileHandler = new FileHandler(c.logFile, true);
@@ -126,5 +128,7 @@ public class WNLogger {
 		} catch(IOException | SecurityException e) {
 			System.err.println("Warning: can't set up file logging. " + e);
 		}
+		
+		l.setLevel(Level.parse(c.loggingLevel));
 	}
 }

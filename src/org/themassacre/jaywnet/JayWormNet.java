@@ -7,12 +7,32 @@ package org.themassacre.jaywnet;
 public class JayWormNet {
 
 	static ConfigurationManager config;
-	public static final String version = "alpha-0.7";
+	public static final String version = "alpha-0.8";
+	public static boolean forceNoGUI = false;
 
+	static void printHelp() {
+		System.err.println("JayWormNET — Java WormNET server\n\nList of available command-line options:\n"
+				+ "\t--nogui\t\t- never use GUI\n\t--version\t- show JayWormNET version\n\t--help\t\t"
+				+ "- show this message\n\nYou may want to edit or create the 'wnet.cfg' file for fine tuning.");
+	}
+	
 	public static void main(String[] args) {
+		// Command-line arguments
+		if(args.length > 0) {
+			if(args[0].equals("--nogui"))
+				forceNoGUI = true;
+			else if(args[0].equals("--help")) {
+				printHelp();
+				System.exit(0);
+			} else if(args[0].equals("--version")) {
+				System.err.println("JayWormNET " + version);
+				System.exit(0);
+			}
+		}
+		
 		// Creating configuration storage
 		config = new ConfigurationManager("wnet.cfg"); // file name here
-
+		
 		// Initializing logging
 		WNLogger.start(config);
 		WNLogger.l.info("JayWormNET " + version);

@@ -67,6 +67,9 @@ import org.themassacre.util.*;
 	public String		banListFileName			= "banlist.csv";
 	public String		whiteListFileName		= "whitelist.csv";
 
+	// GUI
+	public boolean		enableGUI				= true;
+	
 	// Various stuff
 	public boolean		forceHosterIP				= false;
 	public boolean		enableSabotageProtection	= true;
