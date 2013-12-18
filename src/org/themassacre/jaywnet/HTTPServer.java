@@ -167,7 +167,7 @@ class HTTPServerListener extends Thread {
 					// IRC game hosting announcement
 					if(HTTPServer.config.announceGameHosting)
 						IRCServer.broadcast(":" + HTTPServer.config.serverHost + " NOTICE #"
-								+ game.channel +  " :" + game.hosterNickname + " hosting a game: " + game.name, game.channel);
+								+ game.channel +  " :* " + game.hosterNickname + " hosting a game: " + game.name, game.channel);
 					WNLogger.l.info("<#" + game.channel + "> " + game.hosterNickname + " hosting a game: " + game.name);
 					headers = headers + "\r\nSetGameId: : " + game.gameID;
 					body = "<html><head><title>Object moved</title></head><body><h1>Object moved</h1>This object may be "
@@ -263,7 +263,8 @@ public class HTTPServer extends Thread {
 	public static ConfigurationManager config;
 	public static String MOTD = "";
 
-	void readMOTD() {
+	public void readMOTD() {
+		MOTD = "";
 		try(BufferedReader in = new BufferedReader(new InputStreamReader(
 				StreamUtils.getResourceAsStream(config.httpMOTDFileName, this)))) {
 			while(true) {

@@ -60,6 +60,7 @@ import org.themassacre.util.*;
 
 	// IRC announcements options
 	public boolean		announceGameHosting		= false;
+	public boolean		announceOperators		= false;
 
 	// Lists
 	public boolean		enableBanList			= true;
@@ -70,15 +71,29 @@ import org.themassacre.util.*;
 	// GUI
 	public boolean		enableGUI				= true;
 	
+	// Additional in-chat commands
+	public boolean		commandsEnabled			= false;
+	public boolean		showCommandsInChat		= false;
+	public boolean		enableKickCommand		= true;
+	public boolean		enableReloadCommand		= true;
+	public boolean		enableOperCommand		= true;
+	
 	// Various stuff
 	public boolean		forceHosterIP				= false;
 	public boolean		enableSabotageProtection	= true;
 	public boolean		enableWheatSnooperSchemeFix	= true;
 	public boolean		enableURLSpellCheck			= false; // may be used to avoid snoopers join in
 
+	@Cfg(ignore=true) private String cfgFileName = null;
+	
 	// 'cfgFileName' will be loaded automatically once
 	// ConfigurationManager is created
 	public ConfigurationManager(String cfgFileName) {
+		this.cfgFileName = cfgFileName;
+		reload();
+	}
+	
+	public void reload() {
 		// Attempting to parse the file
 		try {
 			ConfigParser.parse(this, StreamUtils.getResourceAsStream(cfgFileName, this), ""); // writing results in itself

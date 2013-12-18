@@ -189,7 +189,7 @@ class User extends Thread {
 								sendError(433, body + " :Bad nickname");
 							else {
 
-								if(getUserByNickName(IRCServer.users, nickFiltered) != null)
+								if(IRCServer.getUserByNickName(nickFiltered) != null)
 									sendln(":" + serverHost + " 433 " + nickFiltered + " :Nickname is already in use");
 								else
 									nickname = nickFiltered;
@@ -259,12 +259,14 @@ class User extends Thread {
 
 					else if(command.equals("PART")) {
 						String chName = body.charAt(0) == '#'? body.substring(1): body;
-						if(Channel.indexOf(channels, chName) != -1)
-							if(inChannel[Channel.indexOf(channels, chName)]) {
-								WNLogger.l.info(nickname + " has left #" + chName);
-								IRCServer.broadcast(formatUserID() + " PART "+ body, chName);
-								inChannel[Channel.indexOf(channels, chName)] = false;
+						String reason = null;
+						if(body.indexOf(':') != -1) {
+							try {
+								reason = body.substring(body.indexOf(':') + 1);
+							} catch(StringIndexOutOfBoundsException e) {
 							}
+						}
+						part(chName, reason);
 					}
 
 					else if(command.equals("MODE")) {
@@ -275,7 +277,7 @@ class User extends Thread {
 							try {
 								if(splitted[0].charAt(0) == '#' && IRCServer.isChannelExist(splitted[0].substring(1)))
 									sendEvent(324, splitted[0] + " +tn");
-								else if(getUserByNickName(IRCServer.users, splitted[0]) != null) {
+								else if(IRCServer.getUserByNickName(splitted[0]) != null) {
 									String modeStr = "";
 									for(char c = 'a'; c < 'z'; c++)
 										if(modes[c])
@@ -303,21 +305,34 @@ class User extends Thread {
 								// Is a channel?
 								if(target.charAt(0) == '#') {
 									if(IRCServer.isChannelExist(target.substring(1))) {
-										IRCServer.broadcast(formatUserID() + " " + command + " "
-												+ target + " " + trailer, target.substring(1), this);
-										WNLogger.l.finer(nickname + " <" + target + ">: " + trailer.substring(1));
+										// Parsing additional commands
+										if(trailer.charAt(1) == '!' && IRCServer.config.commandsEnabled) {
+											new CommandHandler(this, target.substring(1),
+													trailer.substring(1).trim().split(" +"));
+											if(IRCServer.config.showCommandsInChat) {
+												IRCServer.broadcast(formatUserID() + " " + command + " "
+														+ target + " " + trailer, target.substring(1), this);
+												WNLogger.l.finer(nickname + " <" + target + ">: " + trailer.substring(1));
+											}
+										}
+										
+										else {
+											IRCServer.broadcast(formatUserID() + " " + command + " "
+													+ target + " " + trailer, target.substring(1), this);
+											WNLogger.l.finer(nickname + " <" + target + ">: " + trailer.substring(1));
+										}
 									}
 									else
 										sendEvent(401, target + " :No such nick/channel.");
 								}
 								else {
-									User u = getUserByNickName(IRCServer.users, target);
+									User u = IRCServer.getUserByNickName(target);
 									// If user doesn't exist
 									if(u == null)
 										sendEvent(401, target + " :No such nick/channel.");
 									else {
-										WNLogger.l.fine(nickname + " <" + target + ">: " + trailer.substring(1));
 										u.sendln(formatUserID() + " " + command + " " + target + " " + trailer);
+										WNLogger.l.fine(nickname + " <" + target + ">: " + trailer.substring(1));
 									}
 								}
 							}
@@ -407,6 +422,16 @@ class User extends Thread {
 		}
 	}
 
+	public void part(String chName, String reason) {
+		if(Channel.indexOf(IRCServer.channels, chName) != -1) {
+			if(inChannel[Channel.indexOf(IRCServer.channels, chName)]) {
+				WNLogger.l.info(nickname + " has left #" + chName);
+				IRCServer.broadcast(formatUserID() + " PART #" + chName + (reason == null? "": " :" + reason), chName);
+				inChannel[Channel.indexOf(IRCServer.channels, chName)] = false;
+			} else sendError(442, ":You're not on that channel");
+		} else sendError(403, ":No such channel");
+	}
+	
 	public void quit(String reason) {
 		for(int z = 0; z < IRCServer.channels.length; z++) {
 			if(inChannel[z]) {
@@ -429,6 +454,14 @@ class User extends Thread {
 		return ":" + nickname + "!" + username + "@" + (IRCServer.config.useStealthIP?
 				IRCServer.config.stealthIP: connectingFrom);
 	}
+	
+	public String formatMessage(String nick, String message) {
+		return formatUserID() + " NOTICE " + nick + " :" + message;
+	}
+	
+	public String formatMessage(String unused, String message, String channel) {
+		return formatUserID() + " NOTICE #" + channel + " :" + message;
+	}
 
 	public String getNickname() {
 		return (nickname.length() == 0? "<noname>": nickname);
@@ -448,6 +481,10 @@ class User extends Thread {
 			}
 		}
 	}
+	
+	public void sendMessage(String message) {
+		sendln(formatMessage(getNickname(), message));
+	}
 
 	String getEventCode(int event) {
 		String eventCode = String.valueOf(event);
@@ -461,22 +498,13 @@ class User extends Thread {
 	}
 
 	public void sendError(int error, String s) {
-		sendln(":" + IRCServer.config.serverHost + " 433 " + s);
+		sendln(":" + IRCServer.config.serverHost + " "+ getEventCode(error) + " " + s);
 	}
 
 	public boolean inAnyChannel() {
 		for(int i = 0; i < IRCServer.channels.length; i++)
 			if(inChannel[i]) return true;
 		return false;
-	}
-
-	public static User getUserByNickName(ArrayList<User> users, String nickname) {
-		for(int i = 0; i < users.size(); i++) {
-			User found = users.get(i);
-			if(found.nickname.equalsIgnoreCase(nickname))
-				return found;
-		}
-		return null;
 	}
 
 	public User() {
@@ -501,6 +529,8 @@ public class IRCServer extends Thread {
 	public final static ArrayList<String> whitelistIPs = new ArrayList<String>();
 
 	void readList(ArrayList<String> names, ArrayList<String> ips, String fileName) {
+		names.clear();
+		ips.clear();
 		try(BufferedReader in = new BufferedReader(new InputStreamReader(StreamUtils.getResourceAsStream(fileName, this)))) {
 			while(true) {
 				String buffer = in.readLine();
@@ -565,8 +595,7 @@ public class IRCServer extends Thread {
 	@Override public void run() {
 		if(config.ircShowMOTD) readMOTD();
 		// Reading ban-/white-list
-		if(config.enableBanList) readList(banlist, banlistIPs, config.banListFileName);
-		if(config.enableWhiteList) readList(whitelist, whitelistIPs, config.whiteListFileName);
+		reloadLists();
 		try(ServerSocket ss = new ServerSocket(config.IRCPort)) {
 			while(true) {
 				try {
@@ -643,9 +672,18 @@ public class IRCServer extends Thread {
 		}
 	}
 
+	public static User getUserByNickName(String nickname) {
+		for(int i = 0; i < users.size(); i++) {
+			User found = users.get(i);
+			if(found.nickname.equalsIgnoreCase(nickname))
+				return found;
+		}
+		return null;
+	}
+	
 	public IRCServer(ConfigurationManager c) {
 		config = c;
-		channels = readChannelsFromFile(config.channelsFileName);
+		reloadChannels();
 		this.start();
 		WNLogger.l.info("Starting IRC server, listening on port " + config.IRCPort);
 	}
@@ -691,6 +729,15 @@ public class IRCServer extends Thread {
 		}
 
 		return channels.toArray(new Channel[channels.size()]);
+	}
+	
+	public void reloadChannels() {
+		channels = readChannelsFromFile(config.channelsFileName);
+	}
+	
+	public void reloadLists() {
+		if(config.enableBanList) readList(banlist, banlistIPs, config.banListFileName);
+		if(config.enableWhiteList) readList(whitelist, whitelistIPs, config.whiteListFileName);
 	}
 }
 

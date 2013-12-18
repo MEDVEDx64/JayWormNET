@@ -5,9 +5,11 @@ package org.themassacre.jaywnet;
 
 // Main class
 public class JayWormNet {
-
+	public static HTTPServer http = null;
+	public static IRCServer irc = null;
+	
 	static ConfigurationManager config;
-	public static final String version = "alpha-0.8";
+	public static final String version = "alpha-0.9";
 	public static boolean forceNoGUI = false;
 
 	static void printHelp() {
@@ -39,8 +41,8 @@ public class JayWormNet {
 		WNLogger.l.info("Server hosthame is '" + config.serverHost + "'");
 
 		// Starting servers
-		if(config.HTTPPort > 0)		new HTTPServer(config);
-		if(config.IRCPort > 0)		new IRCServer(config);
+		if(config.HTTPPort > 0)		http = new HTTPServer(config);
+		if(config.IRCPort > 0)		irc = new IRCServer(config);
 	}
 
 }
