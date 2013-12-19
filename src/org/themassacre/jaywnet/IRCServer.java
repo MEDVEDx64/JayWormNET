@@ -223,26 +223,26 @@ class User extends Thread {
 					}
 
 					else if(command.equals("JOIN")) {
-						String chName = body.charAt(0) == '#'? body.substring(1): body;
+						String chName = (body.charAt(0) == '#'? body.substring(1): body).split(" +")[0];
 
 						if(nickname.length() == 0)
 							sendln(":" + serverHost + " 451 :Register first.");
 						else if(Channel.indexOf(channels, chName) == -1)
-							sendEvent(403, body	+ " :No such channel.");
+							sendEvent(403, "#" + chName	+ " :No such channel.");
 						else if(inChannel[Channel.indexOf(channels, chName)]) {
-							sendln(":" + serverHost + " 403 " + nickname + " " + body
-									+ " :You already are in channel " + body);
+							sendln(":" + serverHost + " 403 " + nickname + " #" + chName
+									+ " :You already are in channel #" + chName);
 						} else {
 
 							WNLogger.l.info(nickname + " has joined #" + chName);
 							inChannel[Channel.indexOf(channels, chName)] = true;
-							IRCServer.broadcast(formatUserID() + " JOIN :" + body, chName);
+							IRCServer.broadcast(formatUserID() + " JOIN :#" + chName, chName);
 							if(modes['o'])
-								IRCServer.broadcast(":" + serverHost + " MODE "
-										+ body + " +o " + nickname, chName);
+								IRCServer.broadcast(":" + serverHost + " MODE #"
+										+ chName + " +o " + nickname, chName);
 
-							String response = ":" + serverHost + " 353 " + nickname + " = "
-									+ body + " :";
+							String response = ":" + serverHost + " 353 " + nickname + " = #"
+									+ chName + " :";
 							for(int z = 0; z < IRCServer.users.size(); z++) {
 								User u = IRCServer.users.get(z);
 								if(u.inChannel[Channel.indexOf(channels, chName)]) {
@@ -252,13 +252,13 @@ class User extends Thread {
 								}
 							}
 							sendln(response);
-							sendEvent(336, body + " :End of /NAMES list.");
+							sendEvent(336, "#" + chName + " :End of /NAMES list.");
 
 						}
 					}
 
 					else if(command.equals("PART")) {
-						String chName = body.charAt(0) == '#'? body.substring(1): body;
+						String chName = body.charAt(0) == '#'? body.split(" +")[0].substring(1): body.split(" +")[0];
 						String reason = null;
 						if(body.indexOf(':') != -1) {
 							try {
