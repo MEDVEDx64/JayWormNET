@@ -111,8 +111,11 @@ class User extends Thread {
 
 		if(c.showCreated)				sendEvent(3, ":This server was created " + IRCServer.created);
 		if(c.showPlayersCount)			sendEvent(251, ":There are " + IRCServer.users.size() + " users on the server.");
-		if(c.wallchopString != null && c.showChops)
-			sendEvent(5, c.wallchopString);
+		if(c.showCapabilities)
+			sendEvent(5, (c.capPrefix.length() == 0? "": ("PREFIX=" + c.capPrefix))
+					+ (c.capChanTypes.length() == 0? "": (" CHANTYPES=" + c.capChanTypes))
+					+ " NICKLEN=15" + (c.capChanModes.length() == 0? "": (" CHANMODES=" + c.capChanModes + " "))
+					+ ":are supported by this server");
 
 		if(c.showOps) {
 			int ops = 0;

@@ -26,6 +26,7 @@ import org.themassacre.util.*;
 	public int pingTimeout			= 60;
 
 	public String serverHost		= "heavie";
+	public String networkName		= "";
 	public String channelsFileName	= "channels.lst";
 
 	// IRC character encoding
@@ -44,10 +45,12 @@ import org.themassacre.util.*;
 	public boolean showPlayersCount		= true;
 	public boolean showChannelsCount	= true;
 	public boolean showOps				= false;
-	public boolean showChops			= true;
-	public String wallchopString = "WALLCHOPS PREFIX=(ov)@+ CHANTYPES=#& MAXCHANNELS=20"
-			+ "MAXBANS=25 NICKLEN=15 TOPICLEN=120 KICKLEN=90 NETWORK=EFnet"
-			+ "CHANMODES=b,k,l,imnpst MODES=4 :are supported by this server";
+	public boolean showCapabilities		= true;
+	
+	// Server capabilities
+	public String capPrefix = "(ov)@+";
+	public String capChanTypes = "#";
+	public String capChanModes = "b,k,l,imnpst";
 
 	// HTML MOTD
 	public boolean	ircShowMOTD			= true;
