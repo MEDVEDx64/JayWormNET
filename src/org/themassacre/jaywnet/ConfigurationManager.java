@@ -31,7 +31,9 @@ import org.themassacre.util.*;
 	// IRC character encoding
 	public String charset			= "native";
 
-	// IRC operator password
+	// IRC password settings
+	public boolean useIRCPassword	= true;
+	public String IRCPassword		= "ELSILRACLIHP";
 	public String IRCOperPassword	= "kenny";
 
 	// Login messages configuration

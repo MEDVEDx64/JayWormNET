@@ -138,6 +138,7 @@ class User extends Thread {
 		final String serverHost = IRCServer.config.serverHost;
 		final Channel[] channels = IRCServer.channels;
 		String addr = socket.getInetAddress().toString().substring(1);
+		String password = "";
 
 		try {
 
@@ -172,7 +173,8 @@ class User extends Thread {
 						sendln("PONG " + (body.indexOf(':') < 0? ":" + serverHost: body.substring(body.indexOf(':'))));
 					else if(command.equals("PONG")) {
 						isPingPassed = true;
-					} else if(command.equals("PASS")) { // ignore
+					} else if(command.equals("PASS")) {
+						password = body.split(" +")[0];
 					} else if(command.equals("NICK")) {
 
 						if(nickname.length() != 0)
@@ -205,6 +207,18 @@ class User extends Thread {
 						String[] splitted = body.split(":");
 						String[] prefix = splitted[0].trim().split(" +");
 
+						// Password check
+						if(IRCServer.config.useIRCPassword) {
+							try {
+								if(!password.equals(IRCServer.config.IRCPassword))
+									throw new Exception();
+							} catch(Exception e) {
+								sendln("ERROR :Closing Link: " + getNickname() + "[~" + username + "@" + getAddress()
+										+ "] (Bad Password)");
+								throw new Exception("Bad password");
+							}
+						}
+						
 						try {
 							username 	= prefix[0];
 							hostname 	= prefix[1];
@@ -450,9 +464,12 @@ class User extends Thread {
 		socket = null;
 	}
 
+	public String getAddress() {
+		return IRCServer.config.useStealthIP? IRCServer.config.stealthIP: connectingFrom;
+	}
+	
 	public String formatUserID() {
-		return ":" + nickname + "!" + username + "@" + (IRCServer.config.useStealthIP?
-				IRCServer.config.stealthIP: connectingFrom);
+		return ":" + nickname + "!" + username + "@" + getAddress();
 	}
 	
 	public String formatMessage(String nick, String message) {
