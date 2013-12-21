@@ -559,8 +559,8 @@ public class IRCServer extends Thread {
 				String[] row = buffer.split(",");
 				if(row == null) continue;
 				if(row.length < 2) continue;
-				names.add(row[0]);
-				ips.add(row[1]);
+				names.add(row[0].trim());
+				ips.add(row[1].trim());
 			}
 
 		} catch(FileNotFoundException eNF) {
