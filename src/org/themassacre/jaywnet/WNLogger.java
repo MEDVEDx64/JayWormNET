@@ -26,10 +26,10 @@ class GUIHandler extends Handler {
 			
 				// Setting up colors — invalid values (for example, "default") will be ignored
 				try {
-					text.setBackground(Color.decode(c.backgroundColor));
+					text.setBackground(Color.decode(c.guiBackgroundColor));
 				} catch(NumberFormatException e) {
 				} try {
-					text.setForeground(Color.decode(c.foregroundColor));
+					text.setForeground(Color.decode(c.guiForegroundColor));
 				} catch(NumberFormatException e) {
 				}
 				
@@ -120,7 +120,7 @@ public class WNLogger {
 		l.addHandler(conHandler);
 
 		// Checking if graphics available and creating GUI form
-		if(!GraphicsEnvironment.isHeadless() && c.enableGUI && !JayWormNet.forceNoGUI) {
+		if(!GraphicsEnvironment.isHeadless() && c.guiEnabled && !JayWormNet.forceNoGUI) {
 			GUIHandler h = new GUIHandler(config);
 			h.setFormatter(new SimplifiedWNLogFormatter());
 			l.addHandler(h);

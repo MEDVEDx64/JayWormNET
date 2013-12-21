@@ -74,9 +74,9 @@ import org.themassacre.util.*;
 	public String		whiteListFileName		= "whitelist.csv";
 
 	// GUI
-	public boolean		enableGUI				= true;
-	public String		backgroundColor			= "default";
-	public String		foregroundColor			= "default";
+	public boolean		guiEnabled				= true;
+	public String		guiBackgroundColor		= "default";
+	public String		guiForegroundColor		= "default";
 	
 	// Additional in-chat commands
 	public boolean		commandsEnabled			= false;
@@ -87,7 +87,7 @@ import org.themassacre.util.*;
 	
 	// Various stuff
 	public boolean		forceHosterIP				= false;
-	public boolean		enableSabotageProtection	= true;
+	public boolean		enableSabotageProtection	= false;
 	public boolean		enableWheatSnooperSchemeFix	= true;
 	public boolean		enableURLSpellCheck			= false; // may be used to avoid snoopers join in
 

@@ -49,6 +49,10 @@ class HTTPServerListener extends Thread {
 		// Client socket I/O streams
 		BufferedReader in;
 		OutputStream out = null;
+		
+		// HTTP response body
+		String body = "<html><body>This server running JayWormNET "
+				+ JayWormNet.version + " server.</body></head>";
 
 		try {
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -128,8 +132,6 @@ class HTTPServerListener extends Thread {
 				}
 			}
 
-			// HTTP response body
-			String body = "<NOTHING>";
 			if(fileName.equalsIgnoreCase("Login.asp")) {
 				body = "<CONNECT " + HTTPServer.config.serverHost + ">";
 				// Also, sending MOTD here
@@ -183,6 +185,15 @@ class HTTPServerListener extends Thread {
 						boolean found = false;
 						// Looking for a game requested to be closed
 						if(HTTPServer.games.get(i).gameID == gID) {
+							// Anti-sabotage
+							if(HTTPServer.config.enableSabotageProtection /*&& HTTPServer.config.forceHosterIP*/) {
+								if(!HTTPServer.games.get(i).hosterAddress.equals(socket.getInetAddress().toString().substring(1))) {
+									body = "<html><body>The game you're trying to close" +
+											" doesn't belongs to you.</body></html>";
+									break;
+								}
+							}
+							
 							gameName = HTTPServer.games.get(i).name;
 							HTTPServer.games.remove(i);
 							found = true;
@@ -216,13 +227,14 @@ class HTTPServerListener extends Thread {
 				}
 				body = body + "<GAMELISTEND>";
 			} else if(fileName.equalsIgnoreCase("UpdatePlayerInfo.asp")) {
-				// nothing
+				body = "<NOTHING>";
 			} else
-				throw new Exception("Invalid file specified: " + fileName);
+				throw new HTTPServerException();
 
 			serveMessage = createResponse(200, body);
 
 		} catch(HTTPServerException eHTTP) {
+			serveMessage = createResponse(200, body);
 		} catch(MalformedURLException eUrl) {
 			serveMessage = createResponse(500, "Invalid URL");
 			WNLogger.l.warning("Invalid URL in HTTP request: " + received.get(0).split(" +")[1]);

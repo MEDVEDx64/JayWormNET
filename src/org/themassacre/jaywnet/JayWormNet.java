@@ -9,7 +9,7 @@ public class JayWormNet {
 	public static IRCServer irc = null;
 	
 	static ConfigurationManager config;
-	public static final String version = "alpha-0.9_3";
+	public static final String version = "alpha-0.10";
 	public static boolean forceNoGUI = false;
 
 	static void printHelp() {
@@ -38,7 +38,7 @@ public class JayWormNet {
 		// Initializing logging
 		WNLogger.start(config);
 		WNLogger.l.info("JayWormNET " + version);
-		WNLogger.l.info("Server hosthame is '" + config.serverHost + "'");
+		WNLogger.l.info("Server hostname is '" + config.serverHost + "'");
 
 		// Starting servers
 		if(config.HTTPPort > 0)		http = new HTTPServer(config);
