@@ -68,13 +68,15 @@ import org.themassacre.util.*;
 	public boolean		announceOperators		= false;
 
 	// Lists
-	public boolean		enableBanList			= true;
+	public boolean		enableBanList			= false;
 	public boolean		enableWhiteList			= false;
 	public String		banListFileName			= "banlist.csv";
 	public String		whiteListFileName		= "whitelist.csv";
 
 	// GUI
 	public boolean		enableGUI				= true;
+	public String		backgroundColor			= "default";
+	public String		foregroundColor			= "default";
 	
 	// Additional in-chat commands
 	public boolean		commandsEnabled			= false;

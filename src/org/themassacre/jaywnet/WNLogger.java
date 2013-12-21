@@ -3,6 +3,7 @@
 
 package org.themassacre.jaywnet;
 
+import java.awt.Color;
 import java.awt.GraphicsEnvironment;
 import java.io.*;
 import java.util.Date;
@@ -15,13 +16,22 @@ class GUIHandler extends Handler {
 	private StringWriter writer;
 	private PrintWriter out;
 	
-	public GUIHandler() {
+	public GUIHandler(final ConfigurationManager c) {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override public void run() {
 				frame = new JFrame("JayWormNET " + JayWormNet.version);
 				text  = new JTextArea();
 				text.setVisible(true);
 				text.setEditable(false);
+			
+				// Setting up colors — invalid values (for example, "default") will be ignored
+				try {
+					text.setBackground(Color.decode(c.backgroundColor));
+				} catch(NumberFormatException e) {
+				} try {
+					text.setForeground(Color.decode(c.foregroundColor));
+				} catch(NumberFormatException e) {
+				}
 				
 				JScrollPane scroll = new JScrollPane(text, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 						JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -111,7 +121,7 @@ public class WNLogger {
 
 		// Checking if graphics available and creating GUI form
 		if(!GraphicsEnvironment.isHeadless() && c.enableGUI && !JayWormNet.forceNoGUI) {
-			GUIHandler h = new GUIHandler();
+			GUIHandler h = new GUIHandler(config);
 			h.setFormatter(new SimplifiedWNLogFormatter());
 			l.addHandler(h);
 		}
