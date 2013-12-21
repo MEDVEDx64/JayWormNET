@@ -25,7 +25,7 @@ import org.themassacre.util.*;
 	public int pingInterval			= 60;
 	public int pingTimeout			= 60;
 
-	public String serverHost		= "heavie";
+	public String serverHost		= "localhost";
 	public String networkName		= "";
 	public String channelsFileName	= "channels.lst";
 
