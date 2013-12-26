@@ -53,6 +53,11 @@ class User extends Thread {
 
 	public String	quitMessage = ""; // needed by PingWatcher
 	public boolean	isPingPassed = false; // please, avoid fake PONG messages!
+	
+	// Anti-flood fields
+	// TODO: antiflood
+	Date lastMessage = new Date();
+	int floodLevel = 0;
 
 	void login() throws IOException {
 		ConfigurationManager c = IRCServer.config; // For shorter access
@@ -322,6 +327,21 @@ class User extends Thread {
 								// Is a channel?
 								if(target.charAt(0) == '#') {
 									if(IRCServer.isChannelExist(target.substring(1))) {
+										// Anti-flood
+										if(IRCServer.config.antiFloodEnabled) {
+											if(((new Date()).getTime() - lastMessage.getTime()) < IRCServer.config.floodGate)
+												floodLevel += 2;
+											else if(floodLevel > 0)
+												floodLevel--;
+	
+											if(floodLevel > IRCServer.config.floodMaxLevel) {
+												sendln("ERROR :Flooding");
+												throw new Exception("disconnected: flooding");
+											}
+											
+											lastMessage = new Date();
+										}
+										
 										// Parsing additional commands
 										if(trailer.charAt(1) == '!' && IRCServer.config.commandsEnabled) {
 											new CommandHandler(this, target.substring(1),
@@ -418,7 +438,8 @@ class User extends Thread {
 
 		} catch(Exception e) {
 			e.printStackTrace();
-			quit(quitMessage.length() == 0? e.getMessage(): quitMessage);
+			quit(quitMessage.length() == 0? (e.getMessage().contains("disconnect")? e.getMessage():
+				"Internal server error"): quitMessage);
 			WNLogger.l.warning((quitMessage.length() == 0? e.toString(): quitMessage));
 
 		} finally {

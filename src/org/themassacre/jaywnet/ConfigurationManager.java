@@ -52,6 +52,11 @@ import org.themassacre.util.*;
 	public String capChanTypes = "#";
 	public String capChanModes = "b,k,l,imnpst";
 
+	// Anti-flood settings
+	public boolean antiFloodEnabled = true;
+	public int floodGate = 1000;
+	public int floodMaxLevel = 4;
+	
 	// HTML MOTD
 	public boolean	ircShowMOTD			= true;
 	public boolean	httpShowMOTD		= true;
