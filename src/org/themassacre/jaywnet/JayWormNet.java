@@ -9,7 +9,7 @@ public class JayWormNet {
 	public static IRCServer irc = null;
 	
 	static ConfigurationManager config;
-	public static final String version = "beta1";
+	public static final String version = "beta2";
 	public static boolean forceNoGUI = false;
 
 	static void printHelp() {

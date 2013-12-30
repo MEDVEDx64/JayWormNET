@@ -16,14 +16,36 @@ class CommandLookupException extends Exception {
 public class CommandHandler {
 	ArrayList<Command> commands = new ArrayList<Command>();
 	
-	public CommandHandler(User sender, String channel, String[] args, ConfigurationManager c) {
-		commands.add(new KickCommand());
-		commands.add(new OperCommand());
-		commands.add(new ReloadCommand());
-		commands.add(new SpecialCommand());
-		
+	public boolean isCommandExist(Command cmd) {
+		return commands.contains(cmd);
+	}
+	
+	public boolean isCommandExist(String cmdName) {
+		for(int i = 0; i < commands.size(); i++)
+			if(commands.get(i).getName().equals(cmdName))
+				return true;
+		return false;
+	}
+	
+	public boolean isCommandExist(String[] args) {
 		try {
-			String cmd = args[0].substring(1); // warning: args contains a command too
+			return isCommandExist(obtainCommand(args));
+		} catch(ArrayIndexOutOfBoundsException | StringIndexOutOfBoundsException e) {
+			return false;
+		}
+	}
+	
+	String obtainCommand(String[] args) throws ArrayIndexOutOfBoundsException, StringIndexOutOfBoundsException {
+		return args[0].substring(1);
+	}
+	
+	public void registerCommand(Command cmd) {
+		commands.add(cmd);
+	}
+	
+	public void parse(User sender, String channel, String[] args, ConfigurationManager c) {
+		try {
+			String cmd = obtainCommand(args); // warning: args contains a command too
 			try {
 				boolean found = false;
 				for(int i = 0; i < commands.size(); i++) {
@@ -58,6 +80,18 @@ public class CommandHandler {
 		} catch(NullPointerException | ArrayIndexOutOfBoundsException | StringIndexOutOfBoundsException e) {
 			sender.sendSpecialMessage("Internal server error.");
 		}
+	}
+	
+	public CommandHandler() { // Standard commands set
+		registerCommand(new KickCommand());
+		registerCommand(new OperCommand());
+		registerCommand(new ReloadCommand());
+		registerCommand(new SpecialCommand());
+	}
+	
+	public CommandHandler(ArrayList<Command> commands) {
+		if(commands != null)
+			this.commands = commands;
 	}
 
 }

@@ -348,13 +348,18 @@ class User extends Thread {
 										
 										// Parsing additional commands
 										if(trailer.charAt(1) == '!' && IRCServer.config.commandsEnabled) {
-											new CommandHandler(this, target.substring(1),
-													trailer.substring(1).trim().split(" +"), IRCServer.config);
-											if(IRCServer.config.showCommandsInChat) {
+											CommandHandler ch = new CommandHandler();
+											boolean exist = ch.isCommandExist(trailer.substring(1).trim().split(" +"));
+											if((IRCServer.config.showCommandsInChat || !exist)
+													&& !IRCServer.config.swallowAllCommands) {
 												IRCServer.broadcast(formatUserID() + " " + command + " "
 														+ target + " " + trailer, target.substring(1), this);
 												WNLogger.l.finer(nickname + " <" + target + ">: " + trailer.substring(1));
 											}
+											
+											if(exist || IRCServer.config.swallowAllCommands)
+												ch.parse(this, target.substring(1),
+													trailer.substring(1).trim().split(" +"), IRCServer.config);
 										}
 										
 										else {

@@ -92,6 +92,7 @@ import org.themassacre.util.*;
 	// Additional in-chat commands
 	public boolean		commandsEnabled			= false;
 	public boolean		showCommandsInChat		= false;
+	public boolean		swallowAllCommands		= false; // even that command doesn't exist, overrides showCommandsInChat
 	public boolean		enableKickCommand		= true;
 	public boolean		enableReloadCommand		= true;
 	public boolean		enableOperCommand		= true;
