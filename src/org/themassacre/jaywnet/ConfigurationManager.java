@@ -52,7 +52,7 @@ import org.themassacre.util.*;
 	public String capChanTypes = "#";
 	public String capChanModes = "b,k,l,imnpst";
 
-	// 'Special' (anon) messages
+	// 'Special' messages
 	//		0 - nobody
 	//		1 - operators only
 	//		2 - anyone
@@ -76,7 +76,7 @@ import org.themassacre.util.*;
 
 	// IRC announcements options
 	public boolean		announceGameHosting		= false;
-	public boolean		announceOperators		= false;
+	public boolean		showOperatorsActions	= true;
 
 	// Lists
 	public boolean		enableBanList			= false;
@@ -95,7 +95,7 @@ import org.themassacre.util.*;
 	public boolean		enableKickCommand		= true;
 	public boolean		enableReloadCommand		= true;
 	public boolean		enableOperCommand		= true;
-	public boolean		enableAnonCommand		= true; // 'special' green message
+	public boolean		enableSpecialCommand	= true; // 'special' green message
 	
 	// Various stuff
 	public boolean		forceHosterIP				= false;

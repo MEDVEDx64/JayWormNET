@@ -195,12 +195,16 @@ class User extends Thread {
 									nickFiltered += body.charAt(z);
 							}
 
-							if(nickFiltered.length() == 0)
+							if(nickFiltered.length() == 0) {
 								sendError(433, body + " :Bad nickname");
+								throw new Exception("Bad nickname");
+							}
 							else {
 
-								if(IRCServer.getUserByNickName(nickFiltered) != null)
+								if(IRCServer.getUserByNickName(nickFiltered) != null) {
 									sendln(":" + serverHost + " 433 " + nickFiltered + " :Nickname is already in use");
+									throw new Exception("Nickname is already in use");
+								}
 								else
 									nickname = nickFiltered;
 								if(username.length() > 0)
@@ -345,7 +349,7 @@ class User extends Thread {
 										// Parsing additional commands
 										if(trailer.charAt(1) == '!' && IRCServer.config.commandsEnabled) {
 											new CommandHandler(this, target.substring(1),
-													trailer.substring(1).trim().split(" +"));
+													trailer.substring(1).trim().split(" +"), IRCServer.config);
 											if(IRCServer.config.showCommandsInChat) {
 												IRCServer.broadcast(formatUserID() + " " + command + " "
 														+ target + " " + trailer, target.substring(1), this);
@@ -722,8 +726,24 @@ public class IRCServer extends Thread {
 			users.get(i).sendEvent(event,  s);
 	}
 	
+	// only for opers
+	public static void broadcastOperEvent(int event, String s, String channel) {
+		for(int i = 0; i < users.size(); i++) {
+			User u = users.get(i);
+			try {
+				if(u.modes['o'] && u.inChannel[Channel.indexOf(channels, channel)])
+					u.sendEvent(event,  s);
+			} catch(ArrayIndexOutOfBoundsException e) {
+			}
+		}
+	}
+	
 	public static void broadcastSpecialMessage(String s) {
-		broadcastEvent(300, s);
+		broadcastEvent(300, ":" + s);
+	}
+	
+	public static void broadcastOperSpecialMessage(String s, String channel) {
+		broadcastOperEvent(300, ":* " + s, channel);
 	}
 
 	public static User getUserByNickName(String nickname) {

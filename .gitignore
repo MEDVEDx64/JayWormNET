@@ -5,3 +5,7 @@ lib/*.jar
 *.csv
 *.cfg
 *.log
+.classpath
+.project
+*.html
+*.txt
