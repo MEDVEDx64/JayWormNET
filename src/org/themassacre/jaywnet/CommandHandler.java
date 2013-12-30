@@ -19,11 +19,14 @@ public class CommandHandler {
 				reload(sender, c);
 			else if(cmd.equals("oper") && c.enableOperCommand)
 				operCheckout(sender, channel, args, c);
+			else if(cmd.equals("anon") && c.enableAnonCommand)
+				// TODO: anon message permission control
+				IRCServer.broadcastSpecialMessage(args[1]);
 			
 			else {
 				isCommandUsed = false;
 				if(!c.showCommandsInChat)
-					sender.sendMessage("Unknown command: " + cmd);
+					sender.sendSpecialMessage("Unknown command: " + cmd);
 			}
 			
 			if(isCommandUsed)
@@ -31,13 +34,13 @@ public class CommandHandler {
 						") invoked a command: " + cmd);
 			
 		} catch(NullPointerException | ArrayIndexOutOfBoundsException | StringIndexOutOfBoundsException e) {
-			sender.sendMessage("Internal server error.");
+			sender.sendSpecialMessage("Internal server error.");
 		}
 	}
 	
 	void kickUser(User sender, String channel, String[] args) {
 		if(args.length < 2)
-			sender.sendMessage("Not enough parameters.");
+			sender.sendSpecialMessage("Not enough parameters.");
 		else {
 			if(sender.modes['o']) {
 				User user = IRCServer.getUserByNickName(args[1]);
@@ -47,9 +50,9 @@ public class CommandHandler {
 					WNLogger.l.info(sender.getNickname() + " (" + sender.connectingFrom + ") " + "kicked "
 							+ args[1] + (args.length < 3? "": ": " + args[2]));
 				} else
-					sender.sendMessage("No such user: " + args[1]);
+					sender.sendSpecialMessage("No such user: " + args[1]);
 			} else {
-				sender.sendMessage("Permission denied.");
+				sender.sendSpecialMessage("Permission denied.");
 				WNLogger.l.info(sender.getNickname() + " (" + sender.connectingFrom + ") attempted to kick "
 						+ args[1] + ", but has no permissions");
 			}
@@ -59,7 +62,7 @@ public class CommandHandler {
 	// Re-read and apply most of server configuration on-the-fly
 	void reload(User sender, ConfigurationManager c) {
 		if(!sender.modes['o']) {
-			sender.sendMessage("Permission denied.");
+			sender.sendSpecialMessage("Permission denied.");
 			WNLogger.l.info(sender.getNickname() + " (" + sender.connectingFrom + ") attempted to reload "
 					+ "server's configuration, but has no permissions");
 			return;
@@ -74,24 +77,24 @@ public class CommandHandler {
 		JayWormNet.irc.reloadChannels();
 		JayWormNet.irc.reloadLists();
 		
-		sender.sendMessage("Reload complete.");
+		sender.sendSpecialMessage("Reload complete.");
 		WNLogger.l.info("Configuration reload complete");
 	}
 	
 	void operCheckout(User sender, String channel, String[] args, ConfigurationManager c) {
 		if(args.length < 2) {
-			sender.sendMessage("Not enough parameters.");
+			sender.sendSpecialMessage("Not enough parameters.");
 			return;
 		}
 		
 		if(!args[1].equals(c.IRCOperPassword)) {
-			sender.sendMessage("Bad password.");
+			sender.sendSpecialMessage("Bad password.");
 			return;
 		}
 		
 		if(args.length == 2) {
 			sender.modes['o'] = !sender.modes['o'];
-			sender.sendMessage(sender.modes['o']? "You now are an operator!": "You no longer are an operator.");
+			sender.sendSpecialMessage(sender.modes['o']? "You now are an operator!": "You no longer are an operator.");
 			if(c.announceOperators)
 				IRCServer.broadcast(sender.formatMessage(null, "* " + (sender.modes['o']?
 					sender.getNickname() + " now are an operator": sender.getNickname()
@@ -101,13 +104,13 @@ public class CommandHandler {
 		} else {
 			User u = IRCServer.getUserByNickName(args[2]);
 			if(u == null) {
-				sender.sendMessage("No such user: " + args[2]);
+				sender.sendSpecialMessage("No such user: " + args[2]);
 				return;
 			}
 			
 			u.modes['o'] = !u.modes['o'];
-			u.sendMessage(u.modes['o']? "You now are an operator!": "You no longer are an operator.");
-			sender.sendMessage(u.modes['o']? args[2] + " are now an operator.": args[2] + " no longer are an operator.");
+			u.sendSpecialMessage(u.modes['o']? "You now are an operator!": "You no longer are an operator.");
+			sender.sendSpecialMessage(u.modes['o']? args[2] + " are now an operator.": args[2] + " no longer are an operator.");
 			if(c.announceOperators)
 				IRCServer.broadcast(sender.formatMessage(null, "* " + (u.modes['o']?
 					u.getNickname() + " now are an operator": u.getNickname()

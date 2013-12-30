@@ -315,7 +315,7 @@ public class HTTPServer extends Thread {
 					e.printStackTrace();
 					WNLogger.l.severe("Unable to accept connection and create server thread: " + e);
 					try {
-						Thread.sleep(1000);
+						Thread.sleep(config.HTTPFailureSleepTime);
 					} catch(Exception eAnother) {
 						eAnother.printStackTrace();
 					}

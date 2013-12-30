@@ -541,6 +541,10 @@ class User extends Thread {
 	public void sendError(int error, String s) {
 		sendln(":" + IRCServer.config.serverHost + " "+ getEventCode(error) + " " + s);
 	}
+	
+	public void sendSpecialMessage(String s) {
+		sendEvent(300, ":" + s);
+	}
 
 	public boolean inAnyChannel() {
 		for(int i = 0; i < IRCServer.channels.length; i++)
@@ -662,7 +666,7 @@ public class IRCServer extends Thread {
 					WNLogger.l.severe("Failed to register a user: " + e);
 					e.printStackTrace();
 					try {
-						Thread.sleep(5000);
+						Thread.sleep(config.IRCFailureSleepTime);
 					} catch(InterruptedException eInt) {
 						eInt.printStackTrace();
 					}
@@ -711,6 +715,15 @@ public class IRCServer extends Thread {
 			if(u.inChannel[Channel.indexOf(channels, chName)] && !u.nickname.equals(sender.nickname))
 				users.get(i).sendln(s);
 		}
+	}
+	
+	public static void broadcastEvent(int event, String s) {
+		for(int i = 0; i < users.size(); i++)
+			users.get(i).sendEvent(event,  s);
+	}
+	
+	public static void broadcastSpecialMessage(String s) {
+		broadcastEvent(300, s);
 	}
 
 	public static User getUserByNickName(String nickname) {
