@@ -423,7 +423,17 @@ class User extends Thread {
 						for(int z = 0; z < IRCServer.users.size(); z++) {
 							User u = IRCServer.users.get(z);
 							for(int x = 0; x < channels.length; x++) {
-								if(u.inChannel[x])
+								
+								try {
+									String[] args = body.split(" +");
+									if(!args[0].equals(u.nickname) && args[0].length() > 0 && !args[0].equals("*"))
+										continue;
+									if(args[0].length() > 0 && args[1].equals("o") && !u.modes['o'])
+										continue;
+								} catch(NullPointerException | ArrayIndexOutOfBoundsException e) {
+								}
+								
+								if(u.inChannel[x] && !modes['i'])
 									sendln(":" + serverHost + " 352 " + nickname + " #" + channels[x].name
 											+ " " + u.username + " "	+ u.connectingFrom + " " + serverHost
 											+ " " + u.nickname + " H :0 " + u.realname);
@@ -431,6 +441,7 @@ class User extends Thread {
 									sendln(":" + serverHost + " 352 " + nickname + " * " + u.username + " "
 											+ u.connectingFrom + " " + serverHost + " "
 											+ u.nickname + " H :0 " + u.realname);
+								
 							}
 						}
 						sendEvent(315, "* :End of /WHO list.");
