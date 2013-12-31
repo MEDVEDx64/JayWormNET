@@ -49,10 +49,10 @@ class HTTPServerListener extends Thread {
 		// Client socket I/O streams
 		BufferedReader in;
 		OutputStream out = null;
-		
+
 		// HTTP response body
 		String body = "<html><body>This server running JayWormNET "
-				+ JayWormNet.version + " server.</body></head>";
+				+ JayWormNet.version + ".</body></head>";
 
 		try {
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -76,7 +76,7 @@ class HTTPServerListener extends Thread {
 			}
 
 			// Reconstructing message from array into a single buffer, only needed for "finest" logging
-			if(HTTPServer.config.loggingEnabled && Level.parse(HTTPServer.config.loggingLevel).intValue()
+			if(JayWormNet.config.loggingEnabled && Level.parse(JayWormNet.config.loggingLevel).intValue()
 					<= Level.FINEST.intValue()) {
 				StringBuffer b = new StringBuffer();
 				for(int i = 0; i < received.size(); i++) {
@@ -96,14 +96,14 @@ class HTTPServerListener extends Thread {
 			// Parsing URL
 			String fileName = "";
 			String query = "";
-			
+
 			String[] splitted = received.get(0).split(" +");
 			if(splitted.length != 3)
 				throw new HTTPServerException("Bad request");
 			if(!splitted[2].startsWith("HTTP"))
 				throw new HTTPServerException("Bad request");
-			
-			if(HTTPServer.config.enableURLSpellCheck) {
+
+			if(JayWormNet.config.enableURLSpellCheck) {
 				URL url = new URL(splitted[1]);
 				fileName = url.getFile();
 				query = url.getQuery();
@@ -116,7 +116,7 @@ class HTTPServerListener extends Thread {
 					throw new HTTPServerException("Invalid URL");
 				}
 			}
-			
+
 			// Finalizing
 			fileName = fileName.contains("?")? fileName.substring(0, fileName.indexOf("?")): fileName;
 			fileName = fileName.contains("/")? fileName.split("/+")[fileName.split("/+").length-1]: fileName;
@@ -133,9 +133,9 @@ class HTTPServerListener extends Thread {
 			}
 
 			if(fileName.equalsIgnoreCase("Login.asp")) {
-				body = "<CONNECT " + HTTPServer.config.serverHost + ">";
+				body = "<CONNECT " + JayWormNet.config.serverHost + ">";
 				// Also, sending MOTD here
-				if(HTTPServer.config.httpShowMOTD)
+				if(JayWormNet.config.httpShowMOTD)
 					body = body + "<MOTD>" + HTTPServer.MOTD + "</MOTD>";
 			}
 			else if(fileName.equalsIgnoreCase("RequestChannelScheme.asp")) {
@@ -159,7 +159,7 @@ class HTTPServerListener extends Thread {
 					game.channel = params.get("Chan");
 					game.created = (int)(new Date().getTime()/1000);
 
-					game.hosterAddress = HTTPServer.config.forceHosterIP?
+					game.hosterAddress = JayWormNet.config.forceHosterIP?
 							socket.getInetAddress().toString().substring(1): params.get("HostIP");
 					game.hosterNickname = params.get("Nick");
 
@@ -167,8 +167,8 @@ class HTTPServerListener extends Thread {
 					HTTPServer.games.add(game);
 
 					// IRC game hosting announcement
-					if(HTTPServer.config.announceGameHosting)
-						IRCServer.broadcast(":" + HTTPServer.config.serverHost + " NOTICE #"
+					if(JayWormNet.config.announceGameHosting)
+						IRCServer.broadcast(":" + JayWormNet.config.serverHost + " NOTICE #"
 								+ game.channel +  " :* " + game.hosterNickname + " hosting a game: " + game.name, game.channel);
 					WNLogger.l.info("<#" + game.channel + "> " + game.hosterNickname + " hosting a game: " + game.name);
 					headers = headers + "\r\nSetGameId: : " + game.gameID;
@@ -186,14 +186,14 @@ class HTTPServerListener extends Thread {
 						// Looking for a game requested to be closed
 						if(HTTPServer.games.get(i).gameID == gID) {
 							// Anti-sabotage
-							if(HTTPServer.config.enableSabotageProtection /*&& HTTPServer.config.forceHosterIP*/) {
+							if(JayWormNet.config.enableSabotageProtection /*&& JayWormNet.config.forceHosterIP*/) {
 								if(!HTTPServer.games.get(i).hosterAddress.equals(socket.getInetAddress().toString().substring(1))) {
 									body = "<html><body>The game you're trying to close" +
 											" doesn't belongs to you.</body></html>";
 									break;
 								}
 							}
-							
+
 							gameName = HTTPServer.games.get(i).name;
 							HTTPServer.games.remove(i);
 							found = true;
@@ -204,7 +204,7 @@ class HTTPServerListener extends Thread {
 							throw new Exception("Trying to close a non-existant game with id " + gID);
 						}
 
-						IRCServer.broadcast(":" + HTTPServer.config.serverHost + " NOTICE #"
+						IRCServer.broadcast(":" + JayWormNet.config.serverHost + " NOTICE #"
 								+ params.get("Channel") + " :" + gameName + ": game has closed.", params.get("Channel"));
 						WNLogger.l.info("<#" + params.get("Channel") + "> " + gameName + ": game closed");
 					}
@@ -263,7 +263,7 @@ class HTTPServerListener extends Thread {
 		return "HTTP/1.0 " + code + (code < 300? " OK": " ERROR")
 				+ "\r\n" + headers + (mesg.length() == 0? "": ("\r\nContent-Length: " + (mesg.length())))
 				+ "\r\nConnection: close" + (mesg.length() == 0? "": "\r\n\r\n")
-				+ mesg + ((useSnooperFix && HTTPServer.config.enableWheatSnooperSchemeFix)? "\n": "\r\n");
+				+ mesg + ((useSnooperFix && JayWormNet.config.enableWheatSnooperSchemeFix)? "\n": "\r\n");
 	}
 
 	final String headersXPoweredBy = "X-Powered-By: JayWormNET-" + JayWormNet.version;
@@ -272,13 +272,12 @@ class HTTPServerListener extends Thread {
 
 public class HTTPServer extends Thread {
 	public static ArrayList<Game> games = new ArrayList<Game>();
-	public static ConfigurationManager config;
 	public static String MOTD = "";
 
 	public void readMOTD() {
 		MOTD = "";
 		try(BufferedReader in = new BufferedReader(new InputStreamReader(
-				StreamUtils.getResourceAsStream(config.httpMOTDFileName, this)))) {
+				StreamUtils.getResourceAsStream(JayWormNet.config.httpMOTDFileName, this)))) {
 			while(true) {
 				String line = in.readLine();
 				if(line == null)
@@ -294,7 +293,7 @@ public class HTTPServer extends Thread {
 	public static void cleanUpGames() {
 		for(int i = 0; i < games.size(); i++) {
 			// Killing 'too old' games
-			if(((int)(new Date().getTime()/1000) - games.get(i).created) > config.gameLifeTime) {
+			if(((int)(new Date().getTime()/1000) - games.get(i).created) > JayWormNet.config.gameLifeTime) {
 				games.remove(i);
 				break;
 			}
@@ -303,8 +302,8 @@ public class HTTPServer extends Thread {
 
 	// HTTP server main thread
 	@Override public void run() {
-		if(config.httpShowMOTD) readMOTD();
-		try(ServerSocket srvSocket = new ServerSocket(config.HTTPPort)) {
+		if(JayWormNet.config.httpShowMOTD) readMOTD();
+		try(ServerSocket srvSocket = new ServerSocket(JayWormNet.config.HTTPPort)) {
 			while(true) {
 				try {
 					Socket socket = srvSocket.accept();
@@ -315,7 +314,7 @@ public class HTTPServer extends Thread {
 					e.printStackTrace();
 					WNLogger.l.severe("Unable to accept connection and create server thread: " + e);
 					try {
-						Thread.sleep(config.HTTPFailureSleepTime);
+						Thread.sleep(JayWormNet.config.HTTPFailureSleepTime);
 					} catch(Exception eAnother) {
 						eAnother.printStackTrace();
 					}
@@ -329,10 +328,9 @@ public class HTTPServer extends Thread {
 		}
 	}
 
-	public HTTPServer(ConfigurationManager c) {
-		config = c;
+	public HTTPServer() {
 		this.start();
-		WNLogger.l.info("Starting HTTP server, listening on port " + config.HTTPPort);
+		WNLogger.l.info("Starting HTTP server, listening on port " + JayWormNet.config.HTTPPort);
 	}
 
 }

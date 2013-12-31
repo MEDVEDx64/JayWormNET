@@ -53,18 +53,16 @@ class User extends Thread {
 
 	public String	quitMessage = ""; // needed by PingWatcher
 	public boolean	isPingPassed = false; // please, avoid fake PONG messages!
-	
-	// Anti-flood fields
-	// TODO: antiflood
+
 	Date lastMessage = new Date();
 	int floodLevel = 0;
 
 	void login() throws IOException {
-		ConfigurationManager c = IRCServer.config; // For shorter access
+		ConfigurationManager c = JayWormNet.config; // For shorter access
 		String addr = socket.getInetAddress().toString().substring(1);
 
 		// Checking ban-list
-		if(IRCServer.config.enableBanList) {
+		if(JayWormNet.config.enableBanList) {
 			if(!IRCServer.banlist.contains(nickname)) {
 				if(IRCServer.isIPInBanList(addr)) {
 					WNLogger.l.info("Kicked " + nickname + "(" + addr + "): banned user");
@@ -84,7 +82,7 @@ class User extends Thread {
 		}
 
 		// Checking white-list
-		if(IRCServer.config.enableWhiteList) {
+		if(JayWormNet.config.enableWhiteList) {
 			if(!IRCServer.whitelist.contains(nickname)) {
 				if(!IRCServer.isIPInWhiteList(addr)) {
 					WNLogger.l.info("Kicked " + nickname + ": not in white-list");
@@ -111,7 +109,7 @@ class User extends Thread {
 			sendEvent(11, ":with some of StepS' improvements;");
 			sendEvent(11, ":Rewrite in Java by MEDVEDx64.");
 
-			sendEvent(2, ":Your host is " + IRCServer.config.serverHost + ", running JayWormNET " + JayWormNet.version);
+			sendEvent(2, ":Your host is " + JayWormNet.config.serverHost + ", running JayWormNET " + JayWormNet.version);
 		}
 
 		if(c.showCreated)				sendEvent(3, ":This server was created " + IRCServer.created);
@@ -143,7 +141,7 @@ class User extends Thread {
 
 	@Override public void run() {
 		// For shorter access
-		final String serverHost = IRCServer.config.serverHost;
+		final String serverHost = JayWormNet.config.serverHost;
 		final Channel[] channels = IRCServer.channels;
 		String addr = socket.getInetAddress().toString().substring(1);
 		String password = "";
@@ -152,18 +150,29 @@ class User extends Thread {
 
 			do {
 				// Read from client
-				byte[] bytes = new byte[100000]; // it's potentially .. sux
+				byte[] bytes = new byte[JayWormNet.config.IRCBufferSize];
 				int bytesRead = in.read(bytes);
+				
+				if(JayWormNet.config.IRCSkipBytesWhenAvailable) {
+					if(JayWormNet.config.dropIRCUserOnOverflow) {
+						if(in.available() > 0) {
+							in.skip(in.available());
+							sendln("ERROR :Input message is too large.");
+							throw new Exception("disconnected: input message is too large");
+						}
+					} else if(in.available() > 0)
+						in.skip(in.available());
+				}
 
 				if(bytesRead <= 0) {
 					throw new Exception("disconnected");
 				}
 
-				String[] lines = (IRCServer.config.charset.equals("native")? WACharTable.decode(bytes):
-					new String(bytes, IRCServer.config.charset)).trim().split("\n+");
-				WNLogger.l.finest("Input message: " + (IRCServer.config.charset.equals("native")?
+				String[] lines = (JayWormNet.config.charset.equals("native")? WACharTable.decode(bytes):
+					new String(bytes, JayWormNet.config.charset)).trim().split("\n+");
+				WNLogger.l.finest("Input message: " + (JayWormNet.config.charset.equals("native")?
 						WACharTable.decode(bytes):
-					new String(bytes, IRCServer.config.charset)).trim());
+					new String(bytes, JayWormNet.config.charset)).trim());
 
 				for(int i = 0; i < lines.length; i++) {
 					String buffer = lines[i].trim();
@@ -220,9 +229,9 @@ class User extends Thread {
 						String[] prefix = splitted[0].trim().split(" +");
 
 						// Password check
-						if(IRCServer.config.useIRCPassword) {
+						if(JayWormNet.config.useIRCPassword) {
 							try {
-								if(!password.equals(IRCServer.config.IRCPassword))
+								if(!password.equals(JayWormNet.config.IRCPassword))
 									throw new Exception();
 							} catch(Exception e) {
 								sendln("ERROR :Closing Link: " + getNickname() + "[~" + username + "@" + getAddress()
@@ -230,7 +239,7 @@ class User extends Thread {
 								throw new Exception("Bad password");
 							}
 						}
-						
+
 						try {
 							username 	= prefix[0];
 							hostname 	= prefix[1];
@@ -332,36 +341,36 @@ class User extends Thread {
 								if(target.charAt(0) == '#') {
 									if(IRCServer.isChannelExist(target.substring(1))) {
 										// Anti-flood
-										if(IRCServer.config.antiFloodEnabled) {
-											if(((new Date()).getTime() - lastMessage.getTime()) < IRCServer.config.floodGate)
+										if(JayWormNet.config.antiFloodEnabled) {
+											if(((new Date()).getTime() - lastMessage.getTime()) < JayWormNet.config.floodGate)
 												floodLevel += 2;
 											else if(floodLevel > 0)
 												floodLevel--;
-	
-											if(floodLevel > IRCServer.config.floodMaxLevel) {
+
+											if(floodLevel > JayWormNet.config.floodMaxLevel) {
 												sendln("ERROR :Flooding");
 												throw new Exception("disconnected: flooding");
 											}
-											
+
 											lastMessage = new Date();
 										}
-										
+
 										// Parsing additional commands
-										if(trailer.charAt(1) == '!' && IRCServer.config.commandsEnabled) {
+										if(trailer.charAt(1) == '!' && JayWormNet.config.commandsEnabled) {
 											CommandHandler ch = new CommandHandler();
 											boolean exist = ch.isCommandExist(trailer.substring(1).trim().split(" +"));
-											if((IRCServer.config.showCommandsInChat || !exist)
-													&& !IRCServer.config.swallowAllCommands) {
+											if((JayWormNet.config.showCommandsInChat || !exist)
+													&& !JayWormNet.config.swallowAllCommands) {
 												IRCServer.broadcast(formatUserID() + " " + command + " "
 														+ target + " " + trailer, target.substring(1), this);
 												WNLogger.l.finer(nickname + " <" + target + ">: " + trailer.substring(1));
 											}
-											
-											if(exist || IRCServer.config.swallowAllCommands)
+
+											if(exist || JayWormNet.config.swallowAllCommands)
 												ch.parse(this, target.substring(1),
-													trailer.substring(1).trim().split(" +"), IRCServer.config);
+													trailer.substring(1).trim().split(" +"));
 										}
-										
+
 										else {
 											IRCServer.broadcast(formatUserID() + " " + command + " "
 													+ target + " " + trailer, target.substring(1), this);
@@ -392,8 +401,8 @@ class User extends Thread {
 							String operPw = splitted[0];
 							if(operPw.trim().length() == 0)
 								throw new Exception("Not enough params");
-	
-							if(operPw.equals(IRCServer.config.IRCOperPassword)) {
+
+							if(operPw.equals(JayWormNet.config.IRCOperPassword)) {
 								WNLogger.l.info(nickname + " (" + addr + ") has registered as operator");
 								modes['o'] = true;
 								sendln(":" + nickname + " MODE " + nickname + " :+o");
@@ -478,7 +487,7 @@ class User extends Thread {
 			} else sendError(442, ":You're not on that channel");
 		} else sendError(403, ":No such channel");
 	}
-	
+
 	public void quit(String reason) {
 		for(int z = 0; z < IRCServer.channels.length; z++) {
 			if(inChannel[z]) {
@@ -498,17 +507,17 @@ class User extends Thread {
 	}
 
 	public String getAddress() {
-		return IRCServer.config.useStealthIP? IRCServer.config.stealthIP: connectingFrom;
+		return JayWormNet.config.useStealthIP? JayWormNet.config.stealthIP: connectingFrom;
 	}
-	
+
 	public String formatUserID() {
 		return ":" + nickname + "!" + username + "@" + getAddress();
 	}
-	
+
 	public String formatMessage(String nick, String message) {
 		return formatUserID() + " NOTICE " + nick + " :" + message;
 	}
-	
+
 	public String formatMessage(String unused, String message, String channel) {
 		return formatUserID() + " NOTICE #" + channel + " :" + message;
 	}
@@ -520,10 +529,10 @@ class User extends Thread {
 	public void sendln(String s) {
 		if(socket != null) {
 			try {
-				if(IRCServer.config.charset.equals("native"))
+				if(JayWormNet.config.charset.equals("native"))
 					out.write(WACharTable.encode(s+"\r\n"));
 				else
-					out.write((s+"\r\n").getBytes(IRCServer.config.charset));
+					out.write((s+"\r\n").getBytes(JayWormNet.config.charset));
 				WNLogger.l.finest("Output message: " + s+"\r\n");
 			} catch(Exception e) {
 				e.printStackTrace();
@@ -531,7 +540,7 @@ class User extends Thread {
 			}
 		}
 	}
-	
+
 	public void sendMessage(String message) {
 		sendln(formatMessage(getNickname(), message));
 	}
@@ -544,13 +553,13 @@ class User extends Thread {
 	}
 
 	public void sendEvent(int event, String s) {
-		sendln(":" + IRCServer.config.serverHost + " " + getEventCode(event) + " " + getNickname() + " " + s);
+		sendln(":" + JayWormNet.config.serverHost + " " + getEventCode(event) + " " + getNickname() + " " + s);
 	}
 
 	public void sendError(int error, String s) {
-		sendln(":" + IRCServer.config.serverHost + " "+ getEventCode(error) + " " + s);
+		sendln(":" + JayWormNet.config.serverHost + " "+ getEventCode(error) + " " + s);
 	}
-	
+
 	public void sendSpecialMessage(String s) {
 		sendEvent(300, ":" + s);
 	}
@@ -563,8 +572,8 @@ class User extends Thread {
 
 	public User() {
 		inChannel = new boolean[IRCServer.channels.length];
-		if(IRCServer.config.pingsEnabled)
-			(new UserWatcher(this, IRCServer.config)).start(); // now you own your Personal Watcher
+		if(JayWormNet.config.pingsEnabled)
+			(new UserWatcher(this)).start(); // now you own your Personal Watcher
 	}
 }
 
@@ -574,7 +583,6 @@ public class IRCServer extends Thread {
 
 	// IRC user list
 	public static ArrayList<User> users = new ArrayList<User>();
-	public static ConfigurationManager config;
 
 	// Lists are read from csv, where first column is nickname, second — ip address.
 	public final static ArrayList<String> banlist = new ArrayList<String>();
@@ -631,7 +639,7 @@ public class IRCServer extends Thread {
 	public static String[] motdLines = null;
 	public void readMOTD() {
 		try(BufferedReader in = new BufferedReader(new InputStreamReader(
-				StreamUtils.getResourceAsStream(config.ircMOTDFileName, this)))) {
+				StreamUtils.getResourceAsStream(JayWormNet.config.ircMOTDFileName, this)))) {
 			String buffer = "";
 			while(true) {
 				String line = in.readLine();
@@ -647,10 +655,10 @@ public class IRCServer extends Thread {
 	}
 
 	@Override public void run() {
-		if(config.ircShowMOTD) readMOTD();
+		if(JayWormNet.config.ircShowMOTD) readMOTD();
 		// Reading ban-/white-list
 		reloadLists();
-		try(ServerSocket ss = new ServerSocket(config.IRCPort)) {
+		try(ServerSocket ss = new ServerSocket(JayWormNet.config.IRCPort)) {
 			while(true) {
 				try {
 					Socket socket = ss.accept();
@@ -675,7 +683,7 @@ public class IRCServer extends Thread {
 					WNLogger.l.severe("Failed to register a user: " + e);
 					e.printStackTrace();
 					try {
-						Thread.sleep(config.IRCFailureSleepTime);
+						Thread.sleep(JayWormNet.config.IRCFailureSleepTime);
 					} catch(InterruptedException eInt) {
 						eInt.printStackTrace();
 					}
@@ -725,12 +733,12 @@ public class IRCServer extends Thread {
 				users.get(i).sendln(s);
 		}
 	}
-	
+
 	public static void broadcastEvent(int event, String s) {
 		for(int i = 0; i < users.size(); i++)
 			users.get(i).sendEvent(event,  s);
 	}
-	
+
 	// only for opers
 	public static void broadcastOperEvent(int event, String s, String channel) {
 		for(int i = 0; i < users.size(); i++) {
@@ -742,11 +750,11 @@ public class IRCServer extends Thread {
 			}
 		}
 	}
-	
+
 	public static void broadcastSpecialMessage(String s) {
 		broadcastEvent(300, ":" + s);
 	}
-	
+
 	public static void broadcastOperSpecialMessage(String s, String channel) {
 		broadcastOperEvent(300, ":* " + s, channel);
 	}
@@ -759,18 +767,17 @@ public class IRCServer extends Thread {
 		}
 		return null;
 	}
-	
-	public IRCServer(ConfigurationManager c) {
-		config = c;
+
+	public IRCServer() {
 		reloadChannels();
 		this.start();
-		WNLogger.l.info("Starting IRC server, listening on port " + config.IRCPort);
+		WNLogger.l.info("Starting IRC server, listening on port " + JayWormNet.config.IRCPort);
 	}
 
 	public Channel[] readChannelsFromFile(String fileName) {
 		ArrayList<Channel> channels = new ArrayList<Channel>();
 		try(BufferedReader in = new BufferedReader(new InputStreamReader(
-				StreamUtils.getResourceAsStream(IRCServer.config.channelsFileName, this)))) {
+				StreamUtils.getResourceAsStream(JayWormNet.config.channelsFileName, this)))) {
 
 			while(true) {
 				String line = in.readLine();
@@ -809,14 +816,14 @@ public class IRCServer extends Thread {
 
 		return channels.toArray(new Channel[channels.size()]);
 	}
-	
+
 	public void reloadChannels() {
-		channels = readChannelsFromFile(config.channelsFileName);
+		channels = readChannelsFromFile(JayWormNet.config.channelsFileName);
 	}
-	
+
 	public void reloadLists() {
-		if(config.enableBanList) readList(banlist, banlistIPs, config.banListFileName);
-		if(config.enableWhiteList) readList(whitelist, whitelistIPs, config.whiteListFileName);
+		if(JayWormNet.config.enableBanList) readList(banlist, banlistIPs, JayWormNet.config.banListFileName);
+		if(JayWormNet.config.enableWhiteList) readList(whitelist, whitelistIPs, JayWormNet.config.whiteListFileName);
 	}
 }
 
@@ -825,10 +832,10 @@ class UserWatcher extends Thread {
 	private User user = null;
 	private int interval, timeout;
 
-	public UserWatcher(User u, ConfigurationManager c) {
+	public UserWatcher(User u) {
 		user		= u;
-		interval	= c.pingInterval;
-		timeout		= c.pingTimeout;
+		interval	= JayWormNet.config.pingInterval;
+		timeout		= JayWormNet.config.pingTimeout;
 	}
 
 	@Override public void run() {

@@ -15,38 +15,38 @@ class GUIHandler extends Handler {
 	private JTextArea text;
 	private StringWriter writer;
 	private PrintWriter out;
-	
-	public GUIHandler(final ConfigurationManager c) {
+
+	public GUIHandler() {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override public void run() {
 				frame = new JFrame("JayWormNET " + JayWormNet.version);
 				text  = new JTextArea();
 				text.setVisible(true);
 				text.setEditable(false);
-			
+
 				// Setting up colors — invalid values (for example, "default") will be ignored
 				try {
-					text.setBackground(Color.decode(c.guiBackgroundColor));
+					text.setBackground(Color.decode(JayWormNet.config.guiBackgroundColor));
 				} catch(NumberFormatException e) {
 				} try {
-					text.setForeground(Color.decode(c.guiForegroundColor));
+					text.setForeground(Color.decode(JayWormNet.config.guiForegroundColor));
 				} catch(NumberFormatException e) {
 				}
-				
+
 				JScrollPane scroll = new JScrollPane(text, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 						JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-				
+
 				frame.setSize(800, 512);
 				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 				frame.add(scroll);
 				frame.setVisible(true);
-				
+
 				writer = new StringWriter();
 				out = new PrintWriter(writer);
 			}
 		});
 	}
-	
+
 	@Override public void publish(final LogRecord rec) {
 		final Formatter fmt = this.getFormatter();
 		SwingUtilities.invokeLater(new Runnable() {
@@ -56,11 +56,11 @@ class GUIHandler extends Handler {
 			}
 		});
 	}
-	
+
 	@Override public void flush() {
 		out.flush();
 	}
-	
+
 	@Override public void close() {
 		out.close();
 	}
@@ -105,12 +105,10 @@ class SimplifiedWNLogFormatter extends WNLogFormatter {
 // Logging service
 public class WNLogger {
 	static boolean running = false;
-	static ConfigurationManager c = null;
 	public static Logger l = null;
 
-	public static void start(ConfigurationManager config) {
+	public static void start() {
 		if(running) return;
-		c = config;
 		l = Logger.getLogger("wnl");
 
 		// Resetting log formatter for console output, etc.
@@ -120,25 +118,25 @@ public class WNLogger {
 		l.addHandler(conHandler);
 
 		// Checking if graphics available and creating GUI form
-		if(!GraphicsEnvironment.isHeadless() && c.guiEnabled && !JayWormNet.forceNoGUI) {
-			GUIHandler h = new GUIHandler(config);
+		if(!GraphicsEnvironment.isHeadless() && JayWormNet.config.guiEnabled && !JayWormNet.forceNoGUI) {
+			GUIHandler h = new GUIHandler();
 			h.setFormatter(new SimplifiedWNLogFormatter());
 			l.addHandler(h);
 		}
-		
-		if(!c.loggingEnabled) {
-			l.setLevel(Level.parse(c.loggingLevel));
+
+		if(!JayWormNet.config.loggingEnabled) {
+			l.setLevel(Level.parse(JayWormNet.config.loggingLevel));
 			return;
 		}
 		// Setting up log file
 		try {
-			FileHandler fileHandler = new FileHandler(c.logFile, true);
+			FileHandler fileHandler = new FileHandler(JayWormNet.config.logFile, true);
 			fileHandler.setFormatter(new WNLogFormatter());
 			l.addHandler(fileHandler);
 		} catch(IOException | SecurityException e) {
 			System.err.println("Warning: can't set up file logging. " + e);
 		}
-		
-		l.setLevel(Level.parse(c.loggingLevel));
+
+		l.setLevel(Level.parse(JayWormNet.config.loggingLevel));
 	}
 }

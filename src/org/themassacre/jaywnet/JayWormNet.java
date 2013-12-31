@@ -8,8 +8,8 @@ public class JayWormNet {
 	public static HTTPServer http = null;
 	public static IRCServer irc = null;
 	
-	static ConfigurationManager config;
-	public static final String version = "beta3";
+	public static ConfigurationManager config;
+	public static final String version = "beta4";
 	public static boolean forceNoGUI = false;
 
 	static void printHelp() {
@@ -36,13 +36,13 @@ public class JayWormNet {
 		config = new ConfigurationManager("wnet.cfg"); // file name here
 		
 		// Initializing logging
-		WNLogger.start(config);
+		WNLogger.start();
 		WNLogger.l.info("JayWormNET " + version);
 		WNLogger.l.info("Server hostname is '" + config.serverHost + "'");
 
 		// Starting servers
-		if(config.HTTPPort > 0)		http = new HTTPServer(config);
-		if(config.IRCPort > 0)		irc = new IRCServer(config);
+		if(config.HTTPPort > 0)		http = new HTTPServer();
+		if(config.IRCPort > 0)		irc = new IRCServer();
 	}
 
 }

@@ -103,8 +103,13 @@ import org.themassacre.util.*;
 	public boolean		enableSabotageProtection	= false;
 	public boolean		enableWheatSnooperSchemeFix	= true;
 	public boolean		enableURLSpellCheck			= false; // may be used to avoid snoopers join in
+	
+	// Experimental stuff
 	public int			HTTPFailureSleepTime		= 750;
 	public int			IRCFailureSleepTime			= 2500;
+	public boolean		IRCSkipBytesWhenAvailable	= false;
+	public boolean		dropIRCUserOnOverflow		= false;
+	public int			IRCBufferSize				= 262144; // 256K
 
 	@Cfg(ignore=true) private String cfgFileName = null;
 	

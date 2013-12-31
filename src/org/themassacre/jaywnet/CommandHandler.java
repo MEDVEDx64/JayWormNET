@@ -15,18 +15,14 @@ class CommandLookupException extends Exception {
 // IRC macro-commands handler
 public class CommandHandler {
 	ArrayList<Command> commands = new ArrayList<Command>();
-	
-	public boolean isCommandExist(Command cmd) {
-		return commands.contains(cmd);
-	}
-	
+
 	public boolean isCommandExist(String cmdName) {
 		for(int i = 0; i < commands.size(); i++)
-			if(commands.get(i).getName().equals(cmdName))
+			if(commands.get(i).getName().equals(cmdName) && commands.get(i).isEnabled())
 				return true;
 		return false;
 	}
-	
+
 	public boolean isCommandExist(String[] args) {
 		try {
 			return isCommandExist(obtainCommand(args));
@@ -34,16 +30,16 @@ public class CommandHandler {
 			return false;
 		}
 	}
-	
+
 	String obtainCommand(String[] args) throws ArrayIndexOutOfBoundsException, StringIndexOutOfBoundsException {
 		return args[0].substring(1);
 	}
-	
+
 	public void registerCommand(Command cmd) {
 		commands.add(cmd);
 	}
-	
-	public void parse(User sender, String channel, String[] args, ConfigurationManager c) {
+
+	public void parse(User sender, String channel, String[] args) {
 		try {
 			String cmd = obtainCommand(args); // warning: args contains a command too
 			try {
@@ -52,23 +48,23 @@ public class CommandHandler {
 					Command current = commands.get(i);
 					if(current.getName().equals(cmd)) {
 						// Permissions check
-						if(!current.isEnabled(c)) continue;
-						if(current.getPermissionLevel(c) < 1 ||
-								(current.getPermissionLevel(c) == 1 && !sender.modes['o']))
+						if(!current.isEnabled()) continue;
+						if(current.getPermissionLevel() < 1 ||
+								(current.getPermissionLevel() == 1 && !sender.modes['o']))
 									throw new CommandLookupException("Permission denied");
 
 						// Arguments count check
 						if(args.length < current.getRequiredArgsCount())
 							throw new CommandLookupException("Not enough parameters.");
-						
+
 						found = true;
-						commands.get(i).execute(sender, channel, args, c);
+						commands.get(i).execute(sender, channel, args);
 						WNLogger.l.info("User '" + sender.getNickname() + "' (" + sender.connectingFrom +
 								") invoked a command: " + cmd);
 						break;
 					}
 				}
-				
+
 				if(!found)
 					throw new CommandLookupException("Unknown command: " + cmd);
 			} catch(CommandLookupException eCmd) {
@@ -76,19 +72,19 @@ public class CommandHandler {
 				WNLogger.l.warning("Execution of '" + cmd + "' invoked by user '" + sender.getNickname()
 						+ "' (" + sender.connectingFrom + ") has failed: " + eCmd.getMessage());
 			}
-			
+
 		} catch(NullPointerException | ArrayIndexOutOfBoundsException | StringIndexOutOfBoundsException e) {
 			sender.sendSpecialMessage("Internal server error.");
 		}
 	}
-	
+
 	public CommandHandler() { // Standard commands set
 		registerCommand(new KickCommand());
 		registerCommand(new OperCommand());
 		registerCommand(new ReloadCommand());
 		registerCommand(new SpecialCommand());
 	}
-	
+
 	public CommandHandler(ArrayList<Command> commands) {
 		if(commands != null)
 			this.commands = commands;
@@ -102,9 +98,9 @@ class KickCommand implements Command {
 	@Override public String getName() {
 		return "kick";
 	}
-	
-	@Override public boolean isEnabled(ConfigurationManager c) {
-		return c.enableKickCommand;
+
+	@Override public boolean isEnabled() {
+		return JayWormNet.config.enableKickCommand;
 	}
 
 	@Override
@@ -113,13 +109,12 @@ class KickCommand implements Command {
 	}
 
 	@Override
-	public int getPermissionLevel(ConfigurationManager c) {
+	public int getPermissionLevel() {
 		return 1;
 	}
 
 	@Override
-	public void execute(User sender, String channel, String[] args,
-			ConfigurationManager c) {
+	public void execute(User sender, String channel, String[] args) {
 		User user = IRCServer.getUserByNickName(args[1]);
 		if(user != null) {
 			user.sendln("ERROR :Kicked from server" + (args.length < 3? "": ": " + args[2]));
@@ -145,43 +140,42 @@ class OperCommand implements Command {
 	}
 
 	@Override
-	public boolean isEnabled(ConfigurationManager c) {
-		return c.enableOperCommand;
+	public boolean isEnabled() {
+		return JayWormNet.config.enableOperCommand;
 	}
 
 	@Override
-	public int getPermissionLevel(ConfigurationManager c) {
+	public int getPermissionLevel() {
 		return 2;
 	}
 
 	@Override
-	public void execute(User sender, String channel, String[] args,
-			ConfigurationManager c) {
-		if(!args[1].equals(c.IRCOperPassword)) {
+	public void execute(User sender, String channel, String[] args) {
+		if(!args[1].equals(JayWormNet.config.IRCOperPassword)) {
 			sender.sendSpecialMessage("Bad password.");
 			return;
 		}
-		
+
 		if(args.length == 2) {
 			sender.modes['o'] = !sender.modes['o'];
 			sender.sendSpecialMessage(sender.modes['o']? "You now are an operator!": "You no longer are an operator.");
-			if(c.showOperatorsActions)
+			if(JayWormNet.config.showOperatorsActions)
 				IRCServer.broadcastOperSpecialMessage((sender.modes['o']?
 					sender.getNickname() + " now are an operator": sender.getNickname()
 					+ " no longer are an operator"), channel);
 			if(sender.modes['o']) WNLogger.l.info(sender.getNickname() + " has registered as an operator");
-			
+
 		} else {
 			User u = IRCServer.getUserByNickName(args[2]);
 			if(u == null) {
 				sender.sendSpecialMessage("No such user: " + args[2]);
 				return;
 			}
-			
+
 			u.modes['o'] = !u.modes['o'];
 			u.sendSpecialMessage(u.modes['o']? "You now are an operator!": "You no longer are an operator.");
 			sender.sendSpecialMessage(u.modes['o']? args[2] + " are now an operator.": args[2] + " no longer are an operator.");
-			if(c.showOperatorsActions)
+			if(JayWormNet.config.showOperatorsActions)
 				IRCServer.broadcastOperSpecialMessage((u.modes['o']?
 					u.getNickname() + " now are an operator": u.getNickname()
 					+ " no longer are an operator"), channel);
@@ -191,7 +185,7 @@ class OperCommand implements Command {
 					+ " revoked operator's privileges from " + u.getNickname() + " (" + u.connectingFrom + ")");
 		}
 	}
-	
+
 }
 
 class ReloadCommand implements Command {
@@ -207,34 +201,33 @@ class ReloadCommand implements Command {
 	}
 
 	@Override
-	public boolean isEnabled(ConfigurationManager c) {
-		return c.enableReloadCommand;
+	public boolean isEnabled() {
+		return JayWormNet.config.enableReloadCommand;
 	}
 
 	@Override
-	public int getPermissionLevel(ConfigurationManager c) {
+	public int getPermissionLevel() {
 		return 1;
 	}
 
 	// Re-read and apply most of server configuration on-the-fly
-	@Override public void execute(User sender, String channel, String[] args,
-			ConfigurationManager c) {
-		if(c.showOperatorsActions)
+	@Override public void execute(User sender, String channel, String[] args) {
+		if(JayWormNet.config.showOperatorsActions)
 			IRCServer.broadcastOperSpecialMessage(sender.getNickname() + ": reloading server configuration", channel);
 		WNLogger.l.info(sender.getNickname() + " (" + sender.connectingFrom + ") initiated reloading of"
 				+ " server's configuration");
-		
-		c.reload();
+
+		JayWormNet.config.reload();
 		JayWormNet.http.readMOTD();
 		JayWormNet.irc.readMOTD();
 		JayWormNet.irc.reloadChannels();
 		JayWormNet.irc.reloadLists();
-		
+
 		sender.sendSpecialMessage("Reload complete.");
 		WNLogger.l.info("Configuration reload complete");
-		
+
 	}
-	
+
 }
 
 class SpecialCommand implements Command {
@@ -250,23 +243,22 @@ class SpecialCommand implements Command {
 	}
 
 	@Override
-	public boolean isEnabled(ConfigurationManager c) {
-		return c.enableSpecialCommand;
+	public boolean isEnabled() {
+		return JayWormNet.config.enableSpecialCommand;
 	}
 
 	@Override
-	public int getPermissionLevel(ConfigurationManager c) {
-		return c.specialMessagesPermissionLevel;
+	public int getPermissionLevel() {
+		return JayWormNet.config.specialMessagesPermissionLevel;
 	}
 
 	@Override
-	public void execute(User sender, String channel, String[] args,
-			ConfigurationManager c) {
+	public void execute(User sender, String channel, String[] args) {
 		String message = "";
 		for(int i = 1; i < args.length; i++)
 			message = message + args[i] + (i == args.length-1? "": " ");
 		IRCServer.broadcastSpecialMessage("[" + sender.getNickname() + "] " + message);
-		
+
 	}
-	
+
 }

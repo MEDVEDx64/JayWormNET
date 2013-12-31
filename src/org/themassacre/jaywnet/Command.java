@@ -9,16 +9,16 @@ package org.themassacre.jaywnet;
 public interface Command {
 	// Command name
 	public String getName();
-	
+
 	// Minimal required arguments count
 	public int getRequiredArgsCount();
-	
+
 	// Enabled/disabled flag
-	public boolean isEnabled(ConfigurationManager c);
-	
+	public boolean isEnabled();
+
 	// Permission level — nobody(0), oper(1), any(2)
-	public int getPermissionLevel(ConfigurationManager c);
-	
+	public int getPermissionLevel();
+
 	// Command implementation body
-	public void execute(User sender, String channel, String[] args, ConfigurationManager c);
+	public void execute(User sender, String channel, String[] args);
 }
