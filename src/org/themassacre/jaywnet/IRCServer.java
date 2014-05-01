@@ -72,6 +72,7 @@ public class IRCServer extends Thread {
 		} catch(FileNotFoundException eNF) {
 			WNLogger.l.warning("List file not found: " + fileName);
 		} catch(Exception e) {
+			list.clear();
 			e.printStackTrace();
 			WNLogger.l.warning("Can't read list file (" + fileName + "): " + e);
 		}
@@ -267,14 +268,14 @@ public class IRCServer extends Thread {
 
 	public Channel[] readChannelsFromFile(String fileName) {
 		ArrayList<Channel> channels = new ArrayList<Channel>();
-		try(BufferedReader in = new BufferedReader(new InputStreamReader(
-				StreamUtils.getResourceAsStream(JayWormNet.config.channelsFileName, this)))) {
+		ArrayList<String> lines = new ArrayList<String>();
+		readSimpleList(lines, JayWormNet.config.channelsFileName);
 
-			while(true) {
-				String line = in.readLine();
-				if(line == null) break;
-				if(line.length() == 0) break;
-
+		try {
+			if(lines.size() == 0)
+				throw new Exception("No channels were read");
+			
+			for(String line: lines) {
 				// Manual parsing
 				StringBuffer chName = new StringBuffer();
 				StringBuffer chScheme = new StringBuffer();
@@ -301,7 +302,7 @@ public class IRCServer extends Thread {
 		} catch(Exception e) {
 			//System.err.println(e);
 			e.printStackTrace();
-			WNLogger.l.warning("Can't read channels file (" + fileName + "). Default channel set will be used.");
+			WNLogger.l.warning("Can't create channels (" + e + "). Default channel set will be used.");
 			channels.add(new Channel("AnythingGoes", "Pf,Be", ""));
 		}
 
