@@ -11,9 +11,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.io.*;
 
-class CommandLookupException extends Exception {
+class CommandInvocationException extends Exception {
 	private static final long serialVersionUID = -2022485016669801767L;
-	public CommandLookupException(String msg) {
+	public CommandInvocationException(String msg) {
 		super(msg);
 	}
 }

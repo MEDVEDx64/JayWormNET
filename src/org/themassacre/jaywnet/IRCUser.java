@@ -334,7 +334,7 @@ public class IRCUser extends Thread {
 
 										// Parsing additional commands
 										if(trailer.charAt(1) == '!' && JayWormNet.config.commandsEnabled) {
-											String cmd = trailer.substring(1).trim().split(" +")[0];
+											String cmd = trailer.substring(1).trim().split(" +")[0].substring(1);
 											IIRCAdditionalCommand cmdObj = null;
 											boolean exist = true;
 											
@@ -362,16 +362,18 @@ public class IRCUser extends Thread {
 													// Permissions check
 													if(cmdObj.getPermissionLevel() < 1 ||
 															(cmdObj.getPermissionLevel() == 1 && !modes['o']))
-																throw new CommandLookupException("Permission denied");
+																throw new CommandInvocationException("Permission denied");
 
 													// Arguments count check
 													if(trailer.substring(1).trim().split(" +").length < cmdObj.getRequiredArgsCount())
-														throw new CommandLookupException("Not enough parameters.");
+														throw new CommandInvocationException("Not enough parameters.");
 													
 													cmdObj.execute(this, target.substring(1),
 															trailer.substring(1).trim().split(" +"));
 													WNLogger.l.info("User '" + getNickname() + "' (" + connectingFrom +
 															") invoked a command: " + cmd);
+												} catch(CommandInvocationException eCmd) {
+													sendSpecialMessage(eCmd.getMessage());
 												} catch(Exception e) {
 													sendSpecialMessage("Internal server error");
 													WNLogger.l.warning("Execution of '" + cmd + "' invoked by user '" + nickname
