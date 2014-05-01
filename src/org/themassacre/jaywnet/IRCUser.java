@@ -350,6 +350,14 @@ public class IRCUser extends Thread {
 														" tried to invoke non-existant additional command: " + cmd);
 											}
 											
+											// Commands white-list check
+											if(!IRCServer.allowedAdditionalCommands.contains(cmd) && exist) {
+												exist = false;
+												sendSpecialMessage("No such command");
+												WNLogger.l.warning("User " + nickname +
+														" tried to invoke additional command: " + cmd + ", which is not white-listed");
+											}
+											
 											if((JayWormNet.config.showCommandsInChat || !exist)
 													&& !JayWormNet.config.swallowAllCommands) {
 												IRCServer.broadcast(formatUserID() + " " + command + " "

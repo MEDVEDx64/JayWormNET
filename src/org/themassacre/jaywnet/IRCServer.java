@@ -55,7 +55,32 @@ public class IRCServer extends Thread {
 	public final static ArrayList<String> banlistIPs = new ArrayList<String>();
 	public final static ArrayList<String> whitelist = new ArrayList<String>();
 	public final static ArrayList<String> whitelistIPs = new ArrayList<String>();
+	public final static ArrayList<String> allowedAdditionalCommands = new ArrayList<String>();
 
+	void readSimpleList(ArrayList<String> list, String fileName) {
+		list.clear();
+		try(BufferedReader in = new BufferedReader(new InputStreamReader(StreamUtils
+				.getResourceAsStream(fileName, this)))) {
+			while(true) {
+				String line = in.readLine();
+				if(line == null) break;
+				line = (line + "#").substring(0, (line + "#").indexOf('#'));
+				if(line == null) continue;
+				if(line.trim().length() == 0) continue;
+				list.add(line.trim());
+			}
+		} catch(FileNotFoundException eNF) {
+			WNLogger.l.warning("List file not found: " + fileName);
+		} catch(Exception e) {
+			e.printStackTrace();
+			WNLogger.l.warning("Can't read list file (" + fileName + "): " + e);
+		}
+	}
+	
+	void readCommandsList() {
+		readSimpleList(allowedAdditionalCommands, JayWormNet.config.commandsListFileName);
+	}
+	
 	void readList(ArrayList<String> names, ArrayList<String> ips, String fileName) {
 		names.clear();
 		ips.clear();
@@ -288,6 +313,7 @@ public class IRCServer extends Thread {
 	}
 
 	public void reloadLists() {
+		readCommandsList();
 		if(JayWormNet.config.enableBanList) readList(banlist, banlistIPs, JayWormNet.config.banListFileName);
 		if(JayWormNet.config.enableWhiteList) readList(whitelist, whitelistIPs, JayWormNet.config.whiteListFileName);
 	}

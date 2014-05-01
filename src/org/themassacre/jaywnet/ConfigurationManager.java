@@ -83,6 +83,7 @@ import org.themassacre.util.*;
 	public boolean		enableWhiteList			= false;
 	public String		banListFileName			= "banlist.csv";
 	public String		whiteListFileName		= "whitelist.csv";
+	public String		commandsListFileName	= "commands.lst";
 
 	// GUI
 	public boolean		guiEnabled				= true;
