@@ -4,7 +4,7 @@
 package org.themassacre.jaywnet.cmd;
 import org.themassacre.jaywnet.*;
 
-public class anon implements IIRCAdditionalCommand {
+public class say implements IIRCAdditionalCommand {
 	@Override
 	public int getRequiredArgsCount() {
 		return 2;
