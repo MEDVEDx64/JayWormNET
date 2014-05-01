@@ -6,7 +6,7 @@ package org.themassacre.jaywnet;
 // Additional command interface
 // May be used to create custom commands
 
-public interface Command {
+public interface IIRCAdditionalCommand {
 	// Command name
 	public String getName();
 

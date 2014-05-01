@@ -14,7 +14,7 @@ class CommandLookupException extends Exception {
 
 // IRC macro-commands handler
 public class CommandHandler {
-	ArrayList<Command> commands = new ArrayList<Command>();
+	ArrayList<IIRCAdditionalCommand> commands = new ArrayList<IIRCAdditionalCommand>();
 
 	public boolean isCommandExist(String cmdName) {
 		for(int i = 0; i < commands.size(); i++)
@@ -35,7 +35,7 @@ public class CommandHandler {
 		return args[0].substring(1);
 	}
 
-	public void registerCommand(Command cmd) {
+	public void registerCommand(IIRCAdditionalCommand cmd) {
 		commands.add(cmd);
 	}
 
@@ -45,7 +45,7 @@ public class CommandHandler {
 			try {
 				boolean found = false;
 				for(int i = 0; i < commands.size(); i++) {
-					Command current = commands.get(i);
+					IIRCAdditionalCommand current = commands.get(i);
 					if(current.getName().equals(cmd)) {
 						// Permissions check
 						if(!current.isEnabled()) continue;
@@ -85,7 +85,7 @@ public class CommandHandler {
 		registerCommand(new SpecialCommand());
 	}
 
-	public CommandHandler(ArrayList<Command> commands) {
+	public CommandHandler(ArrayList<IIRCAdditionalCommand> commands) {
 		if(commands != null)
 			this.commands = commands;
 	}
@@ -94,7 +94,7 @@ public class CommandHandler {
 
 //// Generic commands ////
 
-class KickCommand implements Command {
+class KickCommand implements IIRCAdditionalCommand {
 	@Override public String getName() {
 		return "kick";
 	}
@@ -127,7 +127,7 @@ class KickCommand implements Command {
 	}
 }
 
-class OperCommand implements Command {
+class OperCommand implements IIRCAdditionalCommand {
 
 	@Override
 	public String getName() {
@@ -188,7 +188,7 @@ class OperCommand implements Command {
 
 }
 
-class ReloadCommand implements Command {
+class ReloadCommand implements IIRCAdditionalCommand {
 
 	@Override
 	public String getName() {
@@ -230,7 +230,7 @@ class ReloadCommand implements Command {
 
 }
 
-class SpecialCommand implements Command {
+class SpecialCommand implements IIRCAdditionalCommand {
 
 	@Override
 	public String getName() {
