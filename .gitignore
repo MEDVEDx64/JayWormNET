@@ -5,6 +5,7 @@ lib/*.jar
 *.csv
 *.cfg
 *.log
+*.lst
 .classpath
 .project
 *.html
