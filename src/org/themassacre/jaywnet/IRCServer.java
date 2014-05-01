@@ -4,11 +4,20 @@
 package org.themassacre.jaywnet;
 
 import org.themassacre.util.*;
+
+import java.lang.reflect.Constructor;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Date;
 import java.io.*;
+
+class CommandLookupException extends Exception {
+	private static final long serialVersionUID = -2022485016669801767L;
+	public CommandLookupException(String msg) {
+		super(msg);
+	}
+}
 
 class Channel {
 	public String name = null;
@@ -357,8 +366,22 @@ class User extends Thread {
 
 										// Parsing additional commands
 										if(trailer.charAt(1) == '!' && JayWormNet.config.commandsEnabled) {
-											CommandHandler ch = new CommandHandler();
-											boolean exist = ch.isCommandExist(trailer.substring(1).trim().split(" +"));
+											String cmd = trailer.substring(1).trim().split(" +")[0];
+											IIRCAdditionalCommand cmdObj = null;
+											boolean exist = true;
+											
+											// Creating command object by it's name
+											try {
+												Class<?> c = Class.forName(JayWormNet.config.commandsPackageName + "." + cmd);
+												Constructor<?> ctor = c.getConstructor();
+												cmdObj = (IIRCAdditionalCommand)ctor.newInstance();
+											} catch(NullPointerException | ClassNotFoundException | NoSuchMethodException e) {
+												exist = false;
+												sendSpecialMessage("No such command");
+												WNLogger.l.warning("User " + nickname +
+														" tried to invoke non-existant additional command: " + cmd);
+											}
+											
 											if((JayWormNet.config.showCommandsInChat || !exist)
 													&& !JayWormNet.config.swallowAllCommands) {
 												IRCServer.broadcast(formatUserID() + " " + command + " "
@@ -366,9 +389,27 @@ class User extends Thread {
 												WNLogger.l.finer(nickname + " <" + target + ">: " + trailer.substring(1));
 											}
 
-											if(exist || JayWormNet.config.swallowAllCommands)
-												ch.parse(this, target.substring(1),
-													trailer.substring(1).trim().split(" +"));
+											if(exist || JayWormNet.config.swallowAllCommands) {
+												try {
+													// Permissions check
+													if(cmdObj.getPermissionLevel() < 1 ||
+															(cmdObj.getPermissionLevel() == 1 && !modes['o']))
+																throw new CommandLookupException("Permission denied");
+
+													// Arguments count check
+													if(trailer.substring(1).trim().split(" +").length < cmdObj.getRequiredArgsCount())
+														throw new CommandLookupException("Not enough parameters.");
+													
+													cmdObj.execute(this, target.substring(1),
+															trailer.substring(1).trim().split(" +"));
+													WNLogger.l.info("User '" + getNickname() + "' (" + connectingFrom +
+															") invoked a command: " + cmd);
+												} catch(Exception e) {
+													sendSpecialMessage("Internal server error");
+													WNLogger.l.warning("Execution of '" + cmd + "' invoked by user '" + nickname
+															+ "' (" + connectingFrom + ") has crashed: " + e);
+												}
+											}
 										}
 
 										else {

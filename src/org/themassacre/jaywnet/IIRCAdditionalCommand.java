@@ -7,14 +7,8 @@ package org.themassacre.jaywnet;
 // May be used to create custom commands
 
 public interface IIRCAdditionalCommand {
-	// Command name
-	public String getName();
-
 	// Minimal required arguments count
 	public int getRequiredArgsCount();
-
-	// Enabled/disabled flag
-	public boolean isEnabled();
 
 	// Permission level — nobody(0), oper(1), any(2)
 	public int getPermissionLevel();
