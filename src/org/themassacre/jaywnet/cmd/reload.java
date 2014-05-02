@@ -19,7 +19,7 @@ public class reload implements IIRCAdditionalCommand {
 	@Override public void execute(IRCUser sender, String channel, String[] args) {
 		if(JayWormNet.config.showOperatorsActions)
 			IRCServer.broadcastOperSpecialMessage(sender.getNickname() + ": reloading server configuration", channel);
-		WNLogger.l.info(sender.getNickname() + " (" + sender.getAddress() + ") initiated reloading of"
+		WNLogger.l.info(sender.getNickname() + " (" + sender.getInetAddress() + ") initiated reloading of"
 				+ " server's configuration");
 
 		JayWormNet.config.reload();

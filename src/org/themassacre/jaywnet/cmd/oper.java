@@ -49,10 +49,10 @@ public class oper implements IIRCAdditionalCommand {
 				IRCServer.broadcastOperSpecialMessage((usermodes['o']?
 					u.getNickname() + " now are an operator": u.getNickname()
 					+ " no longer are an operator"), channel);
-			if(modes['o']) WNLogger.l.info(sender.getNickname() + " (" + sender.getAddress() + ")"
-					+ " gave operator's privileges to " + u.getNickname() + " (" + u.getAddress() + ")");
-			else WNLogger.l.info(sender.getNickname() + " (" + sender.getAddress() + ")"
-					+ " revoked operator's privileges from " + u.getNickname() + " (" + u.getAddress() + ")");
+			if(modes['o']) WNLogger.l.info(sender.getNickname() + " (" + sender.getInetAddress() + ")"
+					+ " gave operator's privileges to " + u.getNickname() + " (" + u.getInetAddress() + ")");
+			else WNLogger.l.info(sender.getNickname() + " (" + sender.getInetAddress() + ")"
+					+ " revoked operator's privileges from " + u.getNickname() + " (" + u.getInetAddress() + ")");
 		}
 	}
 

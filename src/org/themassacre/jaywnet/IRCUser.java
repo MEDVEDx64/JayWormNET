@@ -211,7 +211,7 @@ public class IRCUser extends Thread {
 								if(!password.equals(JayWormNet.config.IRCPassword))
 									throw new Exception();
 							} catch(Exception e) {
-								sendln("ERROR :Closing Link: " + getNickname() + "[~" + username + "@" + getAddress()
+								sendln("ERROR :Closing Link: " + getNickname() + "[~" + username + "@" + getInetAddress()
 										+ "] (Bad Password)");
 								throw new Exception("Bad password");
 							}
@@ -536,12 +536,12 @@ public class IRCUser extends Thread {
 		socket = null;
 	}
 
-	public String getAddress() {
+	public String getInetAddress() {
 		return JayWormNet.config.useStealthIP? JayWormNet.config.stealthIP: connectingFrom;
 	}
 
 	public String formatUserID() {
-		return ":" + nickname + "!" + username + "@" + getAddress();
+		return ":" + nickname + "!" + username + "@" + getInetAddress();
 	}
 
 	public String formatMessage(String nick, String message) {
