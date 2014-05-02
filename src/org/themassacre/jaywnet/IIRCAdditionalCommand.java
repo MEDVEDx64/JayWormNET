@@ -14,5 +14,5 @@ public interface IIRCAdditionalCommand {
 	public int getPermissionLevel();
 
 	// Command implementation body
-	public void execute(IRCUser sender, String channel, String[] args);
+	public void execute(IRCUser sender, String channel, String[] args) throws Exception;
 }

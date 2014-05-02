@@ -13,7 +13,7 @@ import java.util.Date;
 import org.themassacre.util.WACharTable;
 
 public class IRCUser extends Thread {
-	String
+	public String
 		connectingFrom = "",
 		nickname  = "",
 		username = "",
@@ -22,11 +22,11 @@ public class IRCUser extends Thread {
 		realname = "";
 	Socket socket;
 	boolean[] inChannel;
-	boolean[] modes = new boolean[256];
+	public boolean[] modes = new boolean[256];
 
 	// Client socket I/O streams
-	InputStream in = null;
-	OutputStream out = null;
+	public InputStream in = null;
+	public OutputStream out = null;
 
 	String	quitMessage = ""; // needed by PingWatcher
 	boolean	isPingPassed = false; // please, avoid fake PONG messages!
@@ -34,7 +34,7 @@ public class IRCUser extends Thread {
 	Date lastMessage = new Date();
 	int floodLevel = 0;
 
-	void login() throws IOException {
+	public void login() throws IOException {
 		ConfigurationManager c = JayWormNet.config; // For shorter access
 		String addr = socket.getInetAddress().toString().substring(1);
 
@@ -235,38 +235,7 @@ public class IRCUser extends Thread {
 					}
 
 					else if(command.equals("JOIN")) {
-						String chName = (body.charAt(0) == '#'? body.substring(1): body).split(" +")[0];
-
-						if(nickname.length() == 0)
-							sendln(":" + serverHost + " 451 :Register first.");
-						else if(Channel.indexOf(channels, chName) == -1)
-							sendEvent(403, "#" + chName	+ " :No such channel.");
-						else if(inChannel[Channel.indexOf(channels, chName)]) {
-							sendln(":" + serverHost + " 403 " + nickname + " #" + chName
-									+ " :You already are in channel #" + chName);
-						} else {
-
-							WNLogger.l.info(nickname + " has joined #" + chName);
-							inChannel[Channel.indexOf(channels, chName)] = true;
-							IRCServer.broadcast(formatUserID() + " JOIN :#" + chName, chName);
-							if(modes['o'])
-								IRCServer.broadcast(":" + serverHost + " MODE #"
-										+ chName + " +o " + nickname, chName);
-
-							String response = ":" + serverHost + " 353 " + nickname + " = #"
-									+ chName + " :";
-							for(int z = 0; z < IRCServer.users.size(); z++) {
-								IRCUser u = IRCServer.users.get(z);
-								if(u.inChannel[Channel.indexOf(channels, chName)]) {
-									if(IRCServer.users.get(z).modes['o'])
-										response += "@";
-									response = response + u.nickname + " ";
-								}
-							}
-							sendln(response);
-							sendEvent(336, "#" + chName + " :End of /NAMES list."); // do not remove!
-
-						}
+						join((body.charAt(0) == '#'? body.substring(1): body).split(" +")[0]);
 					}
 
 					else if(command.equals("PART")) {
@@ -507,6 +476,42 @@ public class IRCUser extends Thread {
 				IRCServer.users.remove(this);
 		}
 	}
+	
+	public void join(String chName) {
+		final Channel[] channels = IRCServer.channels;
+		final String serverHost = JayWormNet.config.serverHost;
+		
+		if(nickname.length() == 0)
+			sendln(":" + serverHost + " 451 :Register first.");
+		else if(Channel.indexOf(channels, chName) == -1)
+			sendEvent(403, "#" + chName	+ " :No such channel.");
+		else if(inChannel[Channel.indexOf(channels, chName)]) {
+			sendln(":" + serverHost + " 403 " + nickname + " #" + chName
+					+ " :You already are in channel #" + chName);
+		} else {
+
+			WNLogger.l.info(nickname + " has joined #" + chName);
+			inChannel[Channel.indexOf(channels, chName)] = true;
+			IRCServer.broadcast(formatUserID() + " JOIN :#" + chName, chName);
+			if(modes['o'])
+				IRCServer.broadcast(":" + serverHost + " MODE #"
+						+ chName + " +o " + nickname, chName);
+
+			String response = ":" + serverHost + " 353 " + nickname + " = #"
+					+ chName + " :";
+			for(int z = 0; z < IRCServer.users.size(); z++) {
+				IRCUser u = IRCServer.users.get(z);
+				if(u.inChannel[Channel.indexOf(channels, chName)]) {
+					if(IRCServer.users.get(z).modes['o'])
+						response += "@";
+					response = response + u.nickname + " ";
+				}
+			}
+			sendln(response);
+			sendEvent(336, "#" + chName + " :End of /NAMES list."); // do not remove!
+
+		}
+	}
 
 	public void part(String chName, String reason) {
 		if(Channel.indexOf(IRCServer.channels, chName) != -1) {
@@ -588,6 +593,10 @@ public class IRCUser extends Thread {
 	
 	public boolean[] getChannelMap() {
 		return arrayDup(inChannel);
+	}
+	
+	public void closeSocket() throws IOException {
+		socket.close();
 	}
 	
 	public void sendln(String s) {

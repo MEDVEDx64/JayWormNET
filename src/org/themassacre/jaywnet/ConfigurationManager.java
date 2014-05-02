@@ -94,7 +94,7 @@ import org.themassacre.util.*;
 	public boolean		commandsEnabled			= false;
 	public boolean		showCommandsInChat		= false;
 	public boolean		swallowAllCommands		= false; // even that command doesn't exist, overrides showCommandsInChat
-	public String		commandsPackageName		= "org.themassacre.jaywnet.cmd"; // specifies where to look up for command classes
+	@Cfg(ignore=true) public final String commandsPackageName = "org.themassacre.jaywnet.cmd"; // specifies where to look up for command classes
 	
 	// Various stuff
 	public boolean		forceHosterIP				= false;

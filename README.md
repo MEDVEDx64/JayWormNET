@@ -9,7 +9,8 @@ in a single executable JAR file, with all configuration files inside
 
 It supports multichannel, banlist/whitelist, additional in-chat commands
 (like '!kick'), and have simple GUI. Most of it's features are listed and
-can be fine-tuned in 'wnet.cfg' file.
+can be fine-tuned in 'wnet.cfg' file. Since Beta6, there are support of plugin system,
+which allows to expand *JayWormNET*'s functionality with custom in-chat commands.
 
 The current project's stage is Beta.
 

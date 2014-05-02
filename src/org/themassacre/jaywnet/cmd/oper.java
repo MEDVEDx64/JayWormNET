@@ -17,7 +17,7 @@ public class oper implements IIRCAdditionalCommand {
 
 	@Override
 	public void execute(IRCUser sender, String channel, String[] args) {
-		boolean[] modes = sender.getModes();
+		boolean[] modes = sender.modes;
 		
 		if(!args[1].equals(JayWormNet.config.IRCOperPassword)) {
 			sender.sendSpecialMessage("Bad password.");
@@ -40,7 +40,7 @@ public class oper implements IIRCAdditionalCommand {
 				return;
 			}
 			
-			boolean[] usermodes = u.getModes();
+			boolean[] usermodes = u.modes;
 
 			usermodes['o'] = !usermodes['o'];
 			u.sendSpecialMessage(usermodes['o']? "You now are an operator!": "You no longer are an operator.");
