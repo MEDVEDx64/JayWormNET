@@ -10,3 +10,4 @@ lib/*.jar
 .project
 *.html
 *.txt
+.settings
