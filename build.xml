@@ -23,7 +23,7 @@
         <jar destfile="./build/jaywormnet.jar" filesetmanifest="mergewithoutmain">
             <manifest>
                 <attribute name="Main-Class" value="org.themassacre.jaywnet.JayWormNet"/>
-                <attribute name="Class-Path" value="."/>
+                <attribute name="Class-Path" value=".:./plugins/*"/>
             </manifest>
             <fileset dir="./bin"/>
 			<fileset dir="./config"/>
