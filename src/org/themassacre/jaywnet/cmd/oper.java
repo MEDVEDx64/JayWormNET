@@ -17,19 +17,21 @@ public class oper implements IIRCAdditionalCommand {
 
 	@Override
 	public void execute(IRCUser sender, String channel, String[] args) {
+		boolean[] modes = sender.getModes();
+		
 		if(!args[1].equals(JayWormNet.config.IRCOperPassword)) {
 			sender.sendSpecialMessage("Bad password.");
 			return;
 		}
 
 		if(args.length == 2) {
-			sender.modes['o'] = !sender.modes['o'];
-			sender.sendSpecialMessage(sender.modes['o']? "You now are an operator!": "You no longer are an operator.");
+			modes['o'] = !modes['o'];
+			sender.sendSpecialMessage(modes['o']? "You now are an operator!": "You no longer are an operator.");
 			if(JayWormNet.config.showOperatorsActions)
-				IRCServer.broadcastOperSpecialMessage((sender.modes['o']?
+				IRCServer.broadcastOperSpecialMessage((modes['o']?
 					sender.getNickname() + " now are an operator": sender.getNickname()
 					+ " no longer are an operator"), channel);
-			if(sender.modes['o']) WNLogger.l.info(sender.getNickname() + " has registered as an operator");
+			if(modes['o']) WNLogger.l.info(sender.getNickname() + " has registered as an operator");
 
 		} else {
 			IRCUser u = IRCServer.getUserByNickName(args[2]);
@@ -37,18 +39,20 @@ public class oper implements IIRCAdditionalCommand {
 				sender.sendSpecialMessage("No such user: " + args[2]);
 				return;
 			}
+			
+			boolean[] usermodes = u.getModes();
 
-			u.modes['o'] = !u.modes['o'];
-			u.sendSpecialMessage(u.modes['o']? "You now are an operator!": "You no longer are an operator.");
-			sender.sendSpecialMessage(u.modes['o']? args[2] + " are now an operator.": args[2] + " no longer are an operator.");
+			usermodes['o'] = !usermodes['o'];
+			u.sendSpecialMessage(usermodes['o']? "You now are an operator!": "You no longer are an operator.");
+			sender.sendSpecialMessage(usermodes['o']? args[2] + " are now an operator.": args[2] + " no longer are an operator.");
 			if(JayWormNet.config.showOperatorsActions)
-				IRCServer.broadcastOperSpecialMessage((u.modes['o']?
+				IRCServer.broadcastOperSpecialMessage((usermodes['o']?
 					u.getNickname() + " now are an operator": u.getNickname()
 					+ " no longer are an operator"), channel);
-			if(sender.modes['o']) WNLogger.l.info(sender.getNickname() + " (" + sender.connectingFrom + ")"
-					+ " gave operator's privileges to " + u.getNickname() + " (" + u.connectingFrom + ")");
-			else WNLogger.l.info(sender.getNickname() + " (" + sender.connectingFrom + ")"
-					+ " revoked operator's privileges from " + u.getNickname() + " (" + u.connectingFrom + ")");
+			if(modes['o']) WNLogger.l.info(sender.getNickname() + " (" + sender.getAddress() + ")"
+					+ " gave operator's privileges to " + u.getNickname() + " (" + u.getAddress() + ")");
+			else WNLogger.l.info(sender.getNickname() + " (" + sender.getAddress() + ")"
+					+ " revoked operator's privileges from " + u.getNickname() + " (" + u.getAddress() + ")");
 		}
 	}
 

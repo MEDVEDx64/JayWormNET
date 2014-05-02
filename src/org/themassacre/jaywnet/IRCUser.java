@@ -13,23 +13,23 @@ import java.util.Date;
 import org.themassacre.util.WACharTable;
 
 public class IRCUser extends Thread {
-	public String
+	String
 		connectingFrom = "",
 		nickname  = "",
 		username = "",
 		hostname = "",
 		servername = "",
 		realname = "";
-	public Socket socket;
-	public boolean[] inChannel;
-	public boolean[] modes = new boolean[256];
+	Socket socket;
+	boolean[] inChannel;
+	boolean[] modes = new boolean[256];
 
 	// Client socket I/O streams
 	InputStream in = null;
 	OutputStream out = null;
 
-	public String	quitMessage = ""; // needed by PingWatcher
-	public boolean	isPingPassed = false; // please, avoid fake PONG messages!
+	String	quitMessage = ""; // needed by PingWatcher
+	boolean	isPingPassed = false; // please, avoid fake PONG messages!
 
 	Date lastMessage = new Date();
 	int floodLevel = 0;
@@ -552,10 +552,44 @@ public class IRCUser extends Thread {
 		return formatUserID() + " NOTICE #" + channel + " :" + message;
 	}
 
+	String nameCheck(String nameString) {
+		return (nameString.length() == 0? "<noname>": nameString);
+	}
+	
+	boolean[] arrayDup(boolean[] arr) {
+		boolean[] r = new boolean[arr.length];
+		System.arraycopy(arr, 0, r, 0, arr.length);
+		return r;
+	}
+	
 	public String getNickname() {
-		return (nickname.length() == 0? "<noname>": nickname);
+		return nameCheck(nickname);
 	}
 
+	public String getUsername() {
+		return nameCheck(username);
+	}
+	
+	public String getHostname() {
+		return nameCheck(hostname);
+	}
+	
+	public String getServername() {
+		return nameCheck(servername);
+	}
+	
+	public String getRealname() {
+		return nameCheck(realname);
+	}
+	
+	public boolean[] getModes() {
+		return arrayDup(modes);
+	}
+	
+	public boolean[] getChannelMap() {
+		return arrayDup(inChannel);
+	}
+	
 	public void sendln(String s) {
 		if(socket != null) {
 			try {

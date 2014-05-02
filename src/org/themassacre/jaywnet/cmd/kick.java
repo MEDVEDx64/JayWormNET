@@ -23,7 +23,7 @@ public class kick implements IIRCAdditionalCommand {
 			user.sendln("ERROR :Kicked from server" + (args.length < 3? "": ": " + args[2]));
 			user.quit("Kicked by an operator" + (args.length < 3? "": ": " + args[2]));
 			IRCServer.broadcastOperSpecialMessage(sender.getNickname() + ": kicked user '" + args[1] + "'", channel);
-			WNLogger.l.info(sender.getNickname() + " (" + sender.connectingFrom + ") " + "kicked "
+			WNLogger.l.info(sender.getNickname() + " (" + sender.getAddress() + ") " + "kicked "
 					+ args[1] + (args.length < 3? "": ": " + args[2]));
 		} else
 			sender.sendSpecialMessage("No such user: " + args[1]);
