@@ -264,6 +264,7 @@ public class IRCUser extends Thread {
 								}
 							}
 							sendln(response);
+							sendEvent(336, "#" + chName + " :End of /NAMES list."); // do not remove!
 
 						}
 					}

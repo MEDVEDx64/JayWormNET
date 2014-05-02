@@ -1,3 +1,6 @@
+/*/ Part of JayWormNET source code. (C) 2013 Andrey Bobkov (MEDVEDx64).
+    Licensed under the Apache License, Version 2.0.  /*/
+
 package org.themassacre.jaywnet.cmd;
 
 import org.themassacre.jaywnet.*;
