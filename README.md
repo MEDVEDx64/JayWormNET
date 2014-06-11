@@ -30,7 +30,7 @@ Before building, you may want to change JayWormNET's default configuration files
 Running JayWormNET
 ==================
 
-*JayWormNET* only requires Java SE 7.
+*JayWormNET* only requires Java SE 6 (this branch).
 
 With default settings (and HTTP port value unchanged on 80) on *nix* hosts it should be
 executed with root privileges. By default, it shows up GUI (when available) to let it
