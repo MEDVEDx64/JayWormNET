@@ -9,7 +9,7 @@
 
 	<target name="compile">
 		<mkdir dir="./bin"/>
-		<javac destdir="./bin/" srcdir="./src/">
+		<javac destdir="./bin/" srcdir="./src/" executable="${javac1.6}">
 			<classpath refid="libs"/>
 		</javac>
 	</target>
