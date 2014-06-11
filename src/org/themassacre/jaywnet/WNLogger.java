@@ -133,7 +133,7 @@ public class WNLogger {
 			FileHandler fileHandler = new FileHandler(JayWormNet.config.logFile, true);
 			fileHandler.setFormatter(new WNLogFormatter());
 			l.addHandler(fileHandler);
-		} catch(IOException | SecurityException e) {
+		} catch(IOException e) {
 			System.err.println("Warning: can't set up file logging. " + e);
 		}
 

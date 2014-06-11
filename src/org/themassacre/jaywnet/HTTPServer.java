@@ -3,11 +3,21 @@
 
 package org.themassacre.jaywnet;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
-import org.themassacre.util.*;
+
+import org.themassacre.util.StreamUtils;
 
 class Game {
 	public String		name, password, loc, hosterNickname, hosterAddress, channel;
@@ -276,8 +286,11 @@ public class HTTPServer extends Thread {
 
 	public void readMOTD() {
 		MOTD = "";
-		try(BufferedReader in = new BufferedReader(new InputStreamReader(
-				StreamUtils.getResourceAsStream(JayWormNet.config.httpMOTDFileName, this)))) {
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new InputStreamReader(
+					StreamUtils.getResourceAsStream(JayWormNet.config.httpMOTDFileName, this)));
+			
 			while(true) {
 				String line = in.readLine();
 				if(line == null)
@@ -287,6 +300,14 @@ public class HTTPServer extends Thread {
 		} catch(Exception e) {
 			WNLogger.l.warning("Can't read HTTP MOTD file: " + e);
 			MOTD = "[MOTD file has failed to read]";
+		} finally {
+			try {
+				in.close();
+			} catch(IOException eIO) {
+				eIO.printStackTrace();
+			} catch(NullPointerException eNull) {
+				eNull.printStackTrace();
+			}
 		}
 	}
 
@@ -303,7 +324,9 @@ public class HTTPServer extends Thread {
 	// HTTP server main thread
 	@Override public void run() {
 		if(JayWormNet.config.httpShowMOTD) readMOTD();
-		try(ServerSocket srvSocket = new ServerSocket(JayWormNet.config.HTTPPort)) {
+		ServerSocket srvSocket = null;
+		try {
+			srvSocket = new ServerSocket(JayWormNet.config.HTTPPort);
 			while(true) {
 				try {
 					Socket socket = srvSocket.accept();
@@ -325,6 +348,14 @@ public class HTTPServer extends Thread {
 			WNLogger.l.severe("Can't create HTTP server: " + e);
 			WNLogger.l.severe("Exiting now with error status.");
 			System.exit(-1);
+		} finally {
+			try {
+				srvSocket.close();
+			} catch(IOException eIO) {
+				eIO.printStackTrace();
+			} catch(NullPointerException eNull) {
+				eNull.printStackTrace();
+			}
 		}
 	}
 

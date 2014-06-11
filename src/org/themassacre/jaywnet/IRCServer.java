@@ -59,8 +59,9 @@ public class IRCServer extends Thread {
 
 	void readSimpleList(ArrayList<String> list, String fileName) {
 		list.clear();
-		try(BufferedReader in = new BufferedReader(new InputStreamReader(StreamUtils
-				.getResourceAsStream(fileName, this)))) {
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(StreamUtils
+					.getResourceAsStream(fileName, this)));
 			while(true) {
 				String line = in.readLine();
 				if(line == null) break;
@@ -69,13 +70,14 @@ public class IRCServer extends Thread {
 				if(line.trim().length() == 0) continue;
 				list.add(line.trim());
 			}
+			in.close();
 		} catch(FileNotFoundException eNF) {
 			WNLogger.l.warning("List file not found: " + fileName);
 		} catch(Exception e) {
 			list.clear();
 			e.printStackTrace();
 			WNLogger.l.warning("Can't read list file (" + fileName + "): " + e);
-		}
+		} 
 	}
 	
 	void readCommandsList() {
@@ -85,7 +87,8 @@ public class IRCServer extends Thread {
 	void readList(ArrayList<String> names, ArrayList<String> ips, String fileName) {
 		names.clear();
 		ips.clear();
-		try(BufferedReader in = new BufferedReader(new InputStreamReader(StreamUtils.getResourceAsStream(fileName, this)))) {
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(StreamUtils.getResourceAsStream(fileName, this)));
 			while(true) {
 				String buffer = in.readLine();
 				if(buffer == null) break;
@@ -96,6 +99,8 @@ public class IRCServer extends Thread {
 				names.add(row[0].trim());
 				ips.add(row[1].trim());
 			}
+			
+			in.close();
 
 		} catch(FileNotFoundException eNF) {
 			WNLogger.l.warning("List file not found: " + fileName);
@@ -130,15 +135,18 @@ public class IRCServer extends Thread {
 	// MOTD
 	public static String[] motdLines = null;
 	public void readMOTD() {
-		try(BufferedReader in = new BufferedReader(new InputStreamReader(
-				StreamUtils.getResourceAsStream(JayWormNet.config.ircMOTDFileName, this)))) {
+		try {
 			String buffer = "";
+			BufferedReader in = new BufferedReader(new InputStreamReader(
+					StreamUtils.getResourceAsStream(JayWormNet.config.ircMOTDFileName, this)));
+			
 			while(true) {
 				String line = in.readLine();
 				if(line == null) break;
 				buffer = buffer + line + "\n";
 			}
 			motdLines = buffer.split("\n");
+			in.close();
 		} catch(Exception e) {
 			WNLogger.l.warning("Can't read IRC MOTD file: " + e);
 			motdLines = new String[1];
@@ -150,7 +158,12 @@ public class IRCServer extends Thread {
 		if(JayWormNet.config.ircShowMOTD) readMOTD();
 		// Reading ban-/white-list
 		reloadLists();
-		try(ServerSocket ss = new ServerSocket(JayWormNet.config.IRCPort)) {
+		
+		ServerSocket ss = null;
+		
+		try {
+			ss= new ServerSocket(JayWormNet.config.IRCPort);
+			
 			while(true) {
 				try {
 					Socket socket = ss.accept();
@@ -186,6 +199,14 @@ public class IRCServer extends Thread {
 			WNLogger.l.severe("Can't create IRC server: " + e);
 			WNLogger.l.severe("Exiting now with error status.");
 			System.exit(-1);
+		} finally {
+			try {
+				ss.close();
+			} catch(IOException eIO) {
+				eIO.printStackTrace();
+			} catch(NullPointerException eNull) {
+				eNull.printStackTrace();
+			}
 		}
 	}
 

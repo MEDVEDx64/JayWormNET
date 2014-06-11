@@ -222,7 +222,8 @@ public class IRCUser extends Thread {
 							hostname 	= prefix[1];
 							servername 	= prefix[2];
 							realname	= splitted[1];
-						} catch(ArrayIndexOutOfBoundsException | NullPointerException e) {
+						} catch(ArrayIndexOutOfBoundsException e) {
+						} catch(NullPointerException e) {
 						}
 
 						if(username.length() > 0)
@@ -312,7 +313,7 @@ public class IRCUser extends Thread {
 												Class<?> c = Class.forName(JayWormNet.config.commandsPackageName + "." + cmd);
 												Constructor<?> ctor = c.getConstructor();
 												cmdObj = (IIRCAdditionalCommand)ctor.newInstance();
-											} catch(NullPointerException | ClassNotFoundException | NoSuchMethodException e) {
+											} catch(Exception e) {
 												exist = false;
 												sendSpecialMessage("No such command");
 												WNLogger.l.warning("User " + nickname +
@@ -418,7 +419,8 @@ public class IRCUser extends Thread {
 										continue;
 									if(args[0].length() > 0 && args[1].equals("o") && !u.modes['o'])
 										continue;
-								} catch(NullPointerException | ArrayIndexOutOfBoundsException e) {
+								} catch(NullPointerException e) {
+								} catch(ArrayIndexOutOfBoundsException e) {
 								}
 								
 								if(u.inChannel[x] && !modes['i'])
