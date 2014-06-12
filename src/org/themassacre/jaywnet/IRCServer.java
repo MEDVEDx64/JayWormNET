@@ -46,7 +46,8 @@ class Channel {
 public class IRCServer extends Thread {
 	final static String validNickChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`_-|";
 	final static Date created = new Date();
-
+	public ScriptedCommandManager scm = new ScriptedCommandManager();
+	
 	// IRC user list
 	public static ArrayList<IRCUser> users = new ArrayList<IRCUser>();
 
