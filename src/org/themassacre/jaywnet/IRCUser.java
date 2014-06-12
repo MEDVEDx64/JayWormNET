@@ -307,17 +307,22 @@ public class IRCUser extends Thread {
 											IIRCAdditionalCommand cmdObj = null;
 											boolean exist = true;
 											
-											// Creating command object by it's name
-											try {
-												Class<?> c = Class.forName(JayWormNet.config.commandsPackageName + "." + cmd);
-												Constructor<?> ctor = c.getConstructor();
-												cmdObj = (IIRCAdditionalCommand)ctor.newInstance();
-											} catch(NullPointerException | ClassNotFoundException | NoSuchMethodException e) {
-												exist = false;
-												sendSpecialMessage("No such command");
-												WNLogger.l.warning("User " + nickname +
-														" tried to invoke non-existant additional command: " + cmd);
-											}
+											IIRCAdditionalCommand candidate = JayWormNet.irc.scm.getCommandByName(cmd);
+											if(candidate == null || !(candidate instanceof IIRCAdditionalCommand)
+													|| !JayWormNet.config.scriptedCommandsEnabled) {
+												// Creating command object by it's name
+												try {
+													Class<?> c = Class.forName(JayWormNet.config.commandsPackageName + "." + cmd);
+													Constructor<?> ctor = c.getConstructor();
+													cmdObj = (IIRCAdditionalCommand)ctor.newInstance();
+												} catch(NullPointerException | ClassNotFoundException | NoSuchMethodException e) {
+													exist = false;
+													sendSpecialMessage("No such command");
+													WNLogger.l.warning("User " + nickname +
+															" tried to invoke non-existant additional command: " + cmd);
+												}
+											} else
+												cmdObj = candidate;
 											
 											// Commands white-list check
 											if(!IRCServer.allowedAdditionalCommands.contains(cmd) && exist) {

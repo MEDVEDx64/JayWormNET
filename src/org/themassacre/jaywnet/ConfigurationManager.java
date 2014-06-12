@@ -92,6 +92,7 @@ import org.themassacre.util.*;
 	
 	// Additional in-chat commands
 	public boolean		commandsEnabled			= false;
+	public boolean		scriptedCommandsEnabled	= false;
 	public boolean		showCommandsInChat		= false;
 	public boolean		swallowAllCommands		= false; // even that command doesn't exist, overrides showCommandsInChat
 	@Cfg(ignore=true) public final String commandsPackageName = "org.themassacre.jaywnet.cmd"; // specifies where to look up for command classes

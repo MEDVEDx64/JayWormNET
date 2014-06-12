@@ -27,6 +27,7 @@ public class reload implements IIRCAdditionalCommand {
 		JayWormNet.irc.readMOTD();
 		JayWormNet.irc.reloadChannels();
 		JayWormNet.irc.reloadLists();
+		JayWormNet.irc.scm.reloadScripts();
 
 		sender.sendSpecialMessage("Reload complete.");
 		WNLogger.l.info("Configuration reload complete");
