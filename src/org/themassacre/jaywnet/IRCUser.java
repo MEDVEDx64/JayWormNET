@@ -308,7 +308,8 @@ public class IRCUser extends Thread {
 											boolean exist = true;
 											
 											IIRCAdditionalCommand candidate = JayWormNet.irc.scm.getCommandByName(cmd);
-											if(candidate == null || !(candidate instanceof IIRCAdditionalCommand)) {
+											if(candidate == null || !(candidate instanceof IIRCAdditionalCommand)
+													|| !JayWormNet.config.scriptedCommandsEnabled) {
 												// Creating command object by it's name
 												try {
 													Class<?> c = Class.forName(JayWormNet.config.commandsPackageName + "." + cmd);
