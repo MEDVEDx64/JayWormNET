@@ -9,7 +9,6 @@ import javax.script.*;
 import java.io.*;
 
 public class ScriptedCommandManager {
-	final static String prefix = "scripts/commands/";
 	ScriptEngineManager man = null;
 	ScriptEngine engine = null;
 	private Map<String, IIRCAdditionalCommand> commands;
@@ -22,7 +21,7 @@ public class ScriptedCommandManager {
 	
 	public void reloadScripts() {
 		commands = new HashMap<String, IIRCAdditionalCommand>();
-		File repo = new File(prefix);
+		File repo = new File(JayWormNet.config.scriptedCommandsPrefix);
 		if(!repo.exists() || !repo.isDirectory())
 			return;
 		

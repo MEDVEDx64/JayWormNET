@@ -2,11 +2,19 @@
     Licensed under the Apache License, Version 2.0.  /*/
 
 package org.themassacre.jaywnet;
+import javax.script.*;
+import java.io.*;
+
+import org.themassacre.util.StreamUtils;
 
 // Main class
 public class JayWormNet {
 	public static HTTPServer http = null;
 	public static IRCServer irc = null;
+	
+	private static ScriptEngineManager man;
+	private static ScriptEngine engine;
+	public static Invocable masterScript = null;
 	
 	public static ConfigurationManager config;
 	public static final String version = "beta8";
@@ -40,9 +48,25 @@ public class JayWormNet {
 		WNLogger.l.info("JayWormNET " + version);
 		WNLogger.l.info("Server hostname is '" + config.serverHost + "'");
 
+		// Creating script engine
+		man = new ScriptEngineManager();
+		engine = man.getEngineByName("JavaScript");
+		reloadMasterScript();
+		
 		// Starting servers
 		if(config.HTTPPort > 0)		http = new HTTPServer();
 		if(config.IRCPort > 0)		irc = new IRCServer();
+	}
+	
+	public static void reloadMasterScript() {
+		try {
+			engine.eval(new InputStreamReader(StreamUtils.getResourceAsStream(
+					config.masterScriptFileName, config)));
+			masterScript = (Invocable) engine;
+		} catch(Exception e) {
+			WNLogger.l.warning("Unable to evaluate the master script: " + e);
+			masterScript = null;
+		}
 	}
 
 }

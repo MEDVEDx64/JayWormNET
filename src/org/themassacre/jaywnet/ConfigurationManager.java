@@ -85,6 +85,10 @@ import org.themassacre.util.*;
 	public String		whiteListFileName		= "whitelist.csv";
 	public String		commandsListFileName	= "commands.lst";
 
+	// Scripts configuration
+	public String		masterScriptFileName	= "master.js";
+	public String		scriptedCommandsPrefix	= "commands/";
+	
 	// GUI
 	public boolean		guiEnabled				= true;
 	public String		guiBackgroundColor		= "default";
