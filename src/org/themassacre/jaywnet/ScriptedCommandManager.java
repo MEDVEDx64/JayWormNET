@@ -9,7 +9,7 @@ import javax.script.*;
 import java.io.*;
 
 public class ScriptedCommandManager {
-	final static String prefix = "scripts/";
+	final static String prefix = "scripts/commands/";
 	ScriptEngineManager man = null;
 	ScriptEngine engine = null;
 	private Map<String, IIRCAdditionalCommand> commands;
