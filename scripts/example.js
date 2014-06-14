@@ -12,5 +12,5 @@ function getPermissionLevel() {
 }
 
 function execute(sender, channel, args) {
-	sender.sendMessage('Workaet!\n')
+	sender.sendMessage('Workaet!')
 }
