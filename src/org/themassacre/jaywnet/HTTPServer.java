@@ -89,7 +89,7 @@ class HTTPServerListener extends Thread {
 
 			// Validating request type
 			if(!received.get(0).startsWith("GET")) {
-				serveMessage = createResponse(500, "Only GET requests are supported");
+				serveMessage = createResponse(400, "Only GET requests are supported");
 				throw new HTTPServerException("Bad request");
 			}
 
