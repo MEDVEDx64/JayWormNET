@@ -14,7 +14,7 @@ public class JayWormNet {
 	
 	private static ScriptEngineManager man;
 	private static ScriptEngine engine;
-	public static Invocable masterScript = null;
+	private static Invocable masterScript = null;
 	
 	public static ConfigurationManager config;
 	public static final String version = "beta8";
@@ -66,6 +66,16 @@ public class JayWormNet {
 		} catch(Exception e) {
 			WNLogger.l.warning("Unable to evaluate the master script: " + e);
 			masterScript = null;
+		}
+	}
+	
+	public static boolean invokeMasterScriptFunction(String func, Object ... args) {
+		try {
+			return (Boolean)masterScript.invokeFunction(func, args);
+		} catch(Exception e) {
+			if(config.invocationWarningsEnabled)
+				WNLogger.l.warning("Invocation of '" + func + "' has failed: " + e);
+			return true;
 		}
 	}
 

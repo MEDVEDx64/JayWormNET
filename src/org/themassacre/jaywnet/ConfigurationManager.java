@@ -86,8 +86,9 @@ import org.themassacre.util.*;
 	public String		commandsListFileName	= "commands.lst";
 
 	// Scripts configuration
-	public String		masterScriptFileName	= "master.js";
-	public String		scriptedCommandsPrefix	= "commands/";
+	public String		masterScriptFileName		= "master.js";
+	public String		scriptedCommandsPrefix		= "commands/";
+	public boolean		invocationWarningsEnabled	= false;
 	
 	// GUI
 	public boolean		guiEnabled				= true;
