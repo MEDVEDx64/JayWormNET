@@ -1,6 +1,6 @@
 // Master script template
 //
-// These functions are being called from JayWormNET and should return boolean value.
+// These functions is being called from JayWormNET and should return boolean value.
 // Returning false means that the caller function should exit after calling scripted function,
 //    so it's further logic may be replaced by scripted code.
 //
