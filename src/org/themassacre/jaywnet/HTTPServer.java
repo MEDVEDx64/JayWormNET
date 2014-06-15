@@ -132,6 +132,9 @@ class HTTPServerListener extends Thread {
 				}
 			}
 
+			if(!JayWormNet.invokeMasterScriptFunction("onHTTPRequestReceived", this, params, fileName))
+				throw new InterruptedByInvocationException();
+			
 			if(fileName.equalsIgnoreCase("Login.asp")) {
 				body = "<CONNECT " + JayWormNet.config.serverHost + ">";
 				// Also, sending MOTD here
@@ -148,65 +151,70 @@ class HTTPServerListener extends Thread {
 			}
 			else if(fileName.equalsIgnoreCase("Game.asp")) {
 				if(params.get("Cmd").equals("Create")) {
+					if(JayWormNet.invokeMasterScriptFunction("onGameHosted", this, params)) {
 
-					// Registering a new game
-					Game game = new Game();
-					String name = params.get("Name");
-					game.name = name.length() > 29? name.substring(0, 29): name;
-					game.password = params.get("Pwd");
-					game.loc = params.get("Loc");
-					game.gameID = HTTPServer.games.size()+1;
-					game.channel = params.get("Chan");
-					game.created = (int)(new Date().getTime()/1000);
-
-					game.hosterAddress = JayWormNet.config.forceHosterIP?
-							socket.getInetAddress().toString().substring(1): params.get("HostIP");
-					game.hosterNickname = params.get("Nick");
-
-					// Finally pushing it into the list
-					HTTPServer.games.add(game);
-
-					// IRC game hosting announcement
-					if(JayWormNet.config.announceGameHosting)
-						IRCServer.broadcast(":" + JayWormNet.config.serverHost + " NOTICE #"
-								+ game.channel +  " :* " + game.hosterNickname + " hosting a game: " + game.name, game.channel);
-					WNLogger.l.info("<#" + game.channel + "> " + game.hosterNickname + " hosting a game: " + game.name);
-					headers = headers + "\r\nSetGameId: : " + game.gameID;
-					body = "<html><head><title>Object moved</title></head><body><h1>Object moved</h1>This object may be "
-							+ "found <a href=\"/wormageddonweb/GameList.asp?Channel=" + game.channel
-							+ "\">here</a>.</body></html>";
+						// Registering a new game
+						Game game = new Game();
+						String name = params.get("Name");
+						game.name = name.length() > 29? name.substring(0, 29): name;
+						game.password = params.get("Pwd");
+						game.loc = params.get("Loc");
+						game.gameID = HTTPServer.games.size()+1;
+						game.channel = params.get("Chan");
+						game.created = (int)(new Date().getTime()/1000);
+	
+						game.hosterAddress = JayWormNet.config.forceHosterIP?
+								socket.getInetAddress().toString().substring(1): params.get("HostIP");
+						game.hosterNickname = params.get("Nick");
+	
+						// Finally pushing it into the list
+						HTTPServer.games.add(game);
+	
+						// IRC game hosting announcement
+						if(JayWormNet.config.announceGameHosting)
+							IRCServer.broadcast(":" + JayWormNet.config.serverHost + " NOTICE #"
+									+ game.channel +  " :* " + game.hosterNickname + " hosting a game: " + game.name, game.channel);
+						WNLogger.l.info("<#" + game.channel + "> " + game.hosterNickname + " hosting a game: " + game.name);
+						headers = headers + "\r\nSetGameId: : " + game.gameID;
+						body = "<html><head><title>Object moved</title></head><body><h1>Object moved</h1>This object may be "
+								+ "found <a href=\"/wormageddonweb/GameList.asp?Channel=" + game.channel
+								+ "\">here</a>.</body></html>";
+					}
 
 				}
 
 				else if(params.get("Cmd").equals("Close")) {
 					String gameName = "";
 					int gID = Integer.decode(params.get("GameID"));
-					for(int i = 0; i < HTTPServer.games.size(); i++) {
-						boolean found = false;
-						// Looking for a game requested to be closed
-						if(HTTPServer.games.get(i).gameID == gID) {
-							// Anti-sabotage
-							if(JayWormNet.config.enableSabotageProtection /*&& JayWormNet.config.forceHosterIP*/) {
-								if(!HTTPServer.games.get(i).hosterAddress.equals(socket.getInetAddress().toString().substring(1))) {
-									body = "<html><body>The game you're trying to close" +
-											" doesn't belongs to you.</body></html>";
-									break;
+					
+					if(JayWormNet.invokeMasterScriptFunction("onGameClosed", this, params, gID)) {
+						for(int i = 0; i < HTTPServer.games.size(); i++) {
+							boolean found = false;
+							// Looking for a game requested to be closed
+							if(HTTPServer.games.get(i).gameID == gID) {
+								// Anti-sabotage
+								if(JayWormNet.config.enableSabotageProtection /*&& JayWormNet.config.forceHosterIP*/) {
+									if(!HTTPServer.games.get(i).hosterAddress.equals(socket.getInetAddress().toString().substring(1))) {
+										body = "<html><body>The game you're trying to close" +
+												" doesn't belongs to you.</body></html>";
+										break;
+									}
 								}
+	
+								gameName = HTTPServer.games.get(i).name;
+								HTTPServer.games.remove(i);
+								found = true;
+								break;
 							}
-
-							gameName = HTTPServer.games.get(i).name;
-							HTTPServer.games.remove(i);
-							found = true;
-							break;
+	
+							if(!found) {
+								throw new Exception("Trying to close a non-existant game with id " + gID);
+							}
+	
+							IRCServer.broadcast(":" + JayWormNet.config.serverHost + " NOTICE #"
+									+ params.get("Channel") + " :" + gameName + ": game has closed.", params.get("Channel"));
+							WNLogger.l.info("<#" + params.get("Channel") + "> " + gameName + ": game closed");
 						}
-
-						if(!found) {
-							throw new Exception("Trying to close a non-existant game with id " + gID);
-						}
-
-						IRCServer.broadcast(":" + JayWormNet.config.serverHost + " NOTICE #"
-								+ params.get("Channel") + " :" + gameName + ": game has closed.", params.get("Channel"));
-						WNLogger.l.info("<#" + params.get("Channel") + "> " + gameName + ": game closed");
 					}
 				}
 
@@ -232,7 +240,7 @@ class HTTPServerListener extends Thread {
 				throw new HTTPServerException();
 
 			serveMessage = createResponse(200, body);
-
+		} catch(InterruptedByInvocationException eInv) {
 		} catch(HTTPServerException eHTTP) {
 			serveMessage = createResponse(200, body);
 		} catch(MalformedURLException eUrl) {
@@ -247,14 +255,24 @@ class HTTPServerListener extends Thread {
 		} finally {
 			// Sending response back to client
 			try {
+				if(!JayWormNet.invokeMasterScriptFunction("onHTTPResponseSent", this, out))
+					throw new InterruptedByInvocationException();
+				
 				if(out != null) {
 					out.write(serveMessage.getBytes());
 					WNLogger.l.finest("Output message: " + serveMessage);
 				}
 				Thread.sleep(100);
-				socket.close();
+			} catch(InterruptedByInvocationException eInv) {
 			} catch(Exception eAnother) {
 				eAnother.printStackTrace();
+			} finally {
+				try {
+					out.close();
+					socket.close();
+				} catch(IOException eVeryAnother) {
+					eVeryAnother.printStackTrace();
+				}
 			}
 		}
 	}
@@ -302,6 +320,7 @@ public class HTTPServer extends Thread {
 
 	// HTTP server main thread
 	@Override public void run() {
+		if(!JayWormNet.invokeMasterScriptFunction("onHTTPServerCreated", this)) return;
 		if(JayWormNet.config.httpShowMOTD) readMOTD();
 		try(ServerSocket srvSocket = new ServerSocket(JayWormNet.config.HTTPPort)) {
 			while(true) {

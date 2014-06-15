@@ -148,6 +148,9 @@ public class IRCServer extends Thread {
 	}
 
 	@Override public void run() {
+		if(!JayWormNet.invokeMasterScriptFunction("onIRCServerCreated", this))
+			return;
+		
 		if(JayWormNet.config.ircShowMOTD) readMOTD();
 		// Reading ban-/white-list
 		reloadLists();
@@ -155,6 +158,8 @@ public class IRCServer extends Thread {
 			while(true) {
 				try {
 					Socket socket = ss.accept();
+					if(!JayWormNet.invokeMasterScriptFunction("onIRCUserConnected", this, socket))
+						continue;
 					WNLogger.l.info("connection established " + socket.getInetAddress()
 							.toString().substring(1));
 

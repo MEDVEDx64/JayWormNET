@@ -76,7 +76,7 @@ public class JayWormNet {
 		lastInvocation = func;
 		try {
 			return (Boolean)masterScript.invokeFunction(func, args);
-		} catch(Exception e) {
+		} catch(Throwable e) {
 			if(config.invocationWarningsEnabled)
 				WNLogger.l.warning("Invocation of '" + func + "' has failed: " + e);
 			return true;
