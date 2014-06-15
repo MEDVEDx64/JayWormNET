@@ -15,6 +15,7 @@ public class JayWormNet {
 	private static ScriptEngineManager man;
 	private static ScriptEngine engine;
 	private static Invocable masterScript = null;
+	private static String lastInvocation = "unknown";
 	
 	public static ConfigurationManager config;
 	public static final String version = "beta8";
@@ -53,6 +54,8 @@ public class JayWormNet {
 		engine = man.getEngineByName("JavaScript");
 		reloadMasterScript();
 		
+		if(!invokeMasterScriptFunction("onApplicationStarted")) return;
+		
 		// Starting servers
 		if(config.HTTPPort > 0)		http = new HTTPServer();
 		if(config.IRCPort > 0)		irc = new IRCServer();
@@ -70,6 +73,7 @@ public class JayWormNet {
 	}
 	
 	public static boolean invokeMasterScriptFunction(String func, Object ... args) {
+		lastInvocation = func;
 		try {
 			return (Boolean)masterScript.invokeFunction(func, args);
 		} catch(Exception e) {
@@ -78,5 +82,29 @@ public class JayWormNet {
 			return true;
 		}
 	}
+	
+	public static String getLastInvokedFunctionName() {
+		return lastInvocation;
+	}
 
+}
+
+class InterruptedByInvocationException extends Exception {
+	private static final long serialVersionUID = -4236019516497508114L;
+	protected String functionName = "unknown";
+	
+	public InterruptedByInvocationException() {
+		super();
+		functionName = new String(JayWormNet.getLastInvokedFunctionName());
+	}
+	
+	public InterruptedByInvocationException(String func) {
+		super();
+		functionName = func;
+	}
+	
+	@Override public String getMessage() {
+		return "'" + functionName + "'";
+	}
+	
 }
