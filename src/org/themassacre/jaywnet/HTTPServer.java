@@ -339,12 +339,14 @@ public class HTTPServer extends Thread {
 
 	public void reloadFallbackPage() {
 		StringBuffer buf = new StringBuffer();
-		try(BufferedReader br = new BufferedReader(new InputStreamReader(
-					StreamUtils.getResourceAsStream(JayWormNet.config.httpFallbackPage, this)))) {
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+					StreamUtils.getResourceAsStream(JayWormNet.config.httpFallbackPage, this)));
 			String line = null;
 			while((line = br.readLine()) != null)
 				buf.append(line);
 			fallbackPage = new String(buf);
+			br.close();
 		} catch(IOException e) {
 			WNLogger.l.warning("Unable to read the fallback page: " + e);
 		}

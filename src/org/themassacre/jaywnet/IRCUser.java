@@ -322,7 +322,7 @@ public class IRCUser extends Thread {
 													Class<?> c = Class.forName(JayWormNet.config.commandsPackageName + "." + cmd);
 													Constructor<?> ctor = c.getConstructor();
 													cmdObj = (IIRCAdditionalCommand)ctor.newInstance();
-												} catch(NullPointerException | ClassNotFoundException | NoSuchMethodException e) {
+												} catch(Exception e) {
 													exist = false;
 													sendSpecialMessage("No such command");
 													WNLogger.l.warning("User " + nickname +
