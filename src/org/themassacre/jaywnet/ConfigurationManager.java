@@ -63,11 +63,16 @@ import org.themassacre.util.*;
 	public int floodGate = 1000;
 	public int floodMaxLevel = 4;
 	
-	// HTML MOTD
+	// HTML/IRC MOTD
 	public boolean	ircShowMOTD			= true;
 	public boolean	httpShowMOTD		= true;
 	public String	ircMOTDFileName		= "motd.txt";
 	public String	httpMOTDFileName 	= "motd.html";
+	
+	// HTTP fallback settings
+	public boolean	httpFallbackEnabled				= false;
+	public String	httpFallbackPage				= "fallback.html";
+	public boolean	httpAlwaysReloadFallbackPage	= false;
 
 	// Logging settings
 	public boolean		loggingEnabled	= false;

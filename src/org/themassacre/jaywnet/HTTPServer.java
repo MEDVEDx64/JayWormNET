@@ -30,7 +30,7 @@ class HTTPServerException extends Exception {
 class HTTPServerListener extends Thread {
 	Socket socket;
 	boolean useSnooperFix = false;
-
+	
 	public HTTPServerListener(Socket s) {
 		this.socket = s;
 	}
@@ -242,6 +242,12 @@ class HTTPServerListener extends Thread {
 			serveMessage = createResponse(200, body);
 		} catch(InterruptedByInvocationException eInv) {
 		} catch(HTTPServerException eHTTP) {
+			if(JayWormNet.config.httpFallbackEnabled) {
+				if(JayWormNet.config.httpAlwaysReloadFallbackPage)
+					JayWormNet.http.reloadFallbackPage();
+				body = JayWormNet.http.getFallbackPage();
+			}
+			
 			serveMessage = createResponse(200, body);
 		} catch(MalformedURLException eUrl) {
 			serveMessage = createResponse(500, "Invalid URL");
@@ -308,6 +314,25 @@ public class HTTPServer extends Thread {
 		}
 	}
 
+	protected String fallbackPage = "empty page";
+
+	public void reloadFallbackPage() {
+		StringBuffer buf = new StringBuffer();
+		try(BufferedReader br = new BufferedReader(new InputStreamReader(
+					StreamUtils.getResourceAsStream(JayWormNet.config.httpFallbackPage, this)))) {
+			String line = null;
+			while((line = br.readLine()) != null)
+				buf.append(line);
+			fallbackPage = new String(buf);
+		} catch(IOException e) {
+			WNLogger.l.warning("Unable to read the fallback page: " + e);
+		}
+	}
+	
+	public String getFallbackPage() {
+		return fallbackPage;
+	}
+	
 	public static void cleanUpGames() {
 		for(int i = 0; i < games.size(); i++) {
 			// Killing 'too old' games

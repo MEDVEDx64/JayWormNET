@@ -24,6 +24,8 @@ public class reload implements IIRCAdditionalCommand {
 
 		JayWormNet.config.reload();
 		JayWormNet.http.readMOTD();
+		if(JayWormNet.config.httpFallbackEnabled)
+			JayWormNet.http.reloadFallbackPage();
 		JayWormNet.irc.readMOTD();
 		JayWormNet.irc.reloadChannels();
 		JayWormNet.irc.reloadLists();
