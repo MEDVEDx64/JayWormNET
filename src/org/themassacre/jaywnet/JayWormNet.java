@@ -62,6 +62,9 @@ public class JayWormNet {
 	}
 	
 	public static void reloadMasterScript() {
+		if(!config.masterScriptEnabled)
+			return;
+		
 		try {
 			engine.eval(new InputStreamReader(StreamUtils.getResourceAsStream(
 					config.masterScriptFileName, config)));
@@ -73,6 +76,9 @@ public class JayWormNet {
 	}
 	
 	public static boolean invokeMasterScriptFunction(String func, Object ... args) {
+		if(!config.masterScriptEnabled)
+			return true;
+		
 		lastInvocation = func;
 		try {
 			return (Boolean)masterScript.invokeFunction(func, args);
