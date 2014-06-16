@@ -41,7 +41,7 @@ Note about logging
 ==================
 
 Logging to file is disabled by default and you may set `loggingEnabled = true` in `wnet.cfg` file
-to enable it back. Log file (`wn.log`) will be writted in the current working directory (when
+to enable it back. Log file (`wn.log`) will be written in the current working directory (when
 using desktop environment, it's usually the same folder where jar is placed).
 
 License

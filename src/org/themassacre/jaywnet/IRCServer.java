@@ -46,7 +46,8 @@ class Channel {
 public class IRCServer extends Thread {
 	final static String validNickChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`_-|";
 	final static Date created = new Date();
-
+	public ScriptedCommandManager scm = new ScriptedCommandManager();
+	
 	// IRC user list
 	public static ArrayList<IRCUser> users = new ArrayList<IRCUser>();
 
@@ -155,6 +156,9 @@ public class IRCServer extends Thread {
 	}
 
 	@Override public void run() {
+		if(!JayWormNet.invokeMasterScriptFunction("onIRCServerCreated", this))
+			return;
+		
 		if(JayWormNet.config.ircShowMOTD) readMOTD();
 		// Reading ban-/white-list
 		reloadLists();
@@ -167,6 +171,8 @@ public class IRCServer extends Thread {
 			while(true) {
 				try {
 					Socket socket = ss.accept();
+					if(!JayWormNet.invokeMasterScriptFunction("onIRCUserConnected", this, socket))
+						continue;
 					WNLogger.l.info("connection established " + socket.getInetAddress()
 							.toString().substring(1));
 

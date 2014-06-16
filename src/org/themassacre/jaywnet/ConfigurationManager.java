@@ -63,11 +63,16 @@ import org.themassacre.util.*;
 	public int floodGate = 1000;
 	public int floodMaxLevel = 4;
 	
-	// HTML MOTD
+	// HTML/IRC MOTD
 	public boolean	ircShowMOTD			= true;
 	public boolean	httpShowMOTD		= true;
 	public String	ircMOTDFileName		= "motd.txt";
 	public String	httpMOTDFileName 	= "motd.html";
+	
+	// HTTP fallback settings
+	public boolean	httpFallbackEnabled				= false;
+	public String	httpFallbackPage				= "fallback.html";
+	public boolean	httpAlwaysReloadFallbackPage	= false;
 
 	// Logging settings
 	public boolean		loggingEnabled	= false;
@@ -85,6 +90,11 @@ import org.themassacre.util.*;
 	public String		whiteListFileName		= "whitelist.csv";
 	public String		commandsListFileName	= "commands.lst";
 
+	// Scripts configuration
+	public String		masterScriptFileName		= "master.js";
+	public String		scriptedCommandsPrefix		= "commands/";
+	public boolean		invocationWarningsEnabled	= false;
+	
 	// GUI
 	public boolean		guiEnabled				= true;
 	public String		guiBackgroundColor		= "default";
@@ -92,6 +102,7 @@ import org.themassacre.util.*;
 	
 	// Additional in-chat commands
 	public boolean		commandsEnabled			= false;
+	public boolean		scriptedCommandsEnabled	= false;
 	public boolean		showCommandsInChat		= false;
 	public boolean		swallowAllCommands		= false; // even that command doesn't exist, overrides showCommandsInChat
 	@Cfg(ignore=true) public final String commandsPackageName = "org.themassacre.jaywnet.cmd"; // specifies where to look up for command classes

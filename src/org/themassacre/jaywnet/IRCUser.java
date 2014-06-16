@@ -144,6 +144,9 @@ public class IRCUser extends Thread {
 				if(bytesRead <= 0) {
 					throw new Exception("disconnected");
 				}
+				
+				if(!JayWormNet.invokeMasterScriptFunction("onIRCRawReceived", this, bytes, bytesRead))
+					continue;
 
 				String[] lines = (JayWormNet.config.charset.equals("native")? WACharTable.decode(bytes):
 					new String(bytes, JayWormNet.config.charset)).trim().split("\n+");
@@ -163,6 +166,9 @@ public class IRCUser extends Thread {
 					String command = buffer.toUpperCase().substring(0, (buffer + " ").indexOf(" "));
 					String body = buffer.contains(" ")? buffer.substring(command.length() + 1): "";
 
+					if(!JayWormNet.invokeMasterScriptFunction("onIRCCommandReceived", this, command, body))
+						throw new InterruptedByInvocationException();
+					
 					if(command.equals("PING"))
 						sendln("PONG " + (body.indexOf(':') < 0? ":" + serverHost: body.substring(body.indexOf(':'))));
 					else if(command.equals("PONG")) {
@@ -308,17 +314,22 @@ public class IRCUser extends Thread {
 											IIRCAdditionalCommand cmdObj = null;
 											boolean exist = true;
 											
-											// Creating command object by it's name
-											try {
-												Class<?> c = Class.forName(JayWormNet.config.commandsPackageName + "." + cmd);
-												Constructor<?> ctor = c.getConstructor();
-												cmdObj = (IIRCAdditionalCommand)ctor.newInstance();
-											} catch(Exception e) {
-												exist = false;
-												sendSpecialMessage("No such command");
-												WNLogger.l.warning("User " + nickname +
-														" tried to invoke non-existant additional command: " + cmd);
-											}
+											IIRCAdditionalCommand candidate = JayWormNet.irc.scm.getCommandByName(cmd);
+											if(candidate == null || !(candidate instanceof IIRCAdditionalCommand)
+													|| !JayWormNet.config.scriptedCommandsEnabled) {
+												// Creating command object by it's name
+												try {
+													Class<?> c = Class.forName(JayWormNet.config.commandsPackageName + "." + cmd);
+													Constructor<?> ctor = c.getConstructor();
+													cmdObj = (IIRCAdditionalCommand)ctor.newInstance();
+												} catch(NullPointerException | ClassNotFoundException | NoSuchMethodException e) {
+													exist = false;
+													sendSpecialMessage("No such command");
+													WNLogger.l.warning("User " + nickname +
+															" tried to invoke non-existant additional command: " + cmd);
+												}
+											} else
+												cmdObj = candidate;
 											
 											// Commands white-list check
 											if(!IRCServer.allowedAdditionalCommands.contains(cmd) && exist) {
@@ -455,6 +466,7 @@ public class IRCUser extends Thread {
 
 			} while(socket != null);
 
+		} catch(InterruptedByInvocationException eInv) {
 		} catch(Exception e) {
 			e.printStackTrace();
 			quit(quitMessage.length() == 0? (e.getMessage().contains("disconnect")? e.getMessage():
@@ -480,6 +492,9 @@ public class IRCUser extends Thread {
 	}
 	
 	public void join(String chName) {
+		if(!JayWormNet.invokeMasterScriptFunction("onIRCUserJoined", this, chName))
+			return;
+		
 		final Channel[] channels = IRCServer.channels;
 		final String serverHost = JayWormNet.config.serverHost;
 		
@@ -516,6 +531,9 @@ public class IRCUser extends Thread {
 	}
 
 	public void part(String chName, String reason) {
+		if(!JayWormNet.invokeMasterScriptFunction("onIRCUserParted", this, chName, reason))
+			return;
+		
 		if(Channel.indexOf(IRCServer.channels, chName) != -1) {
 			if(inChannel[Channel.indexOf(IRCServer.channels, chName)]) {
 				WNLogger.l.info(nickname + " has left #" + chName);
@@ -526,6 +544,9 @@ public class IRCUser extends Thread {
 	}
 
 	public void quit(String reason) {
+		if(!JayWormNet.invokeMasterScriptFunction("onIRCUserQuit", this, reason))
+			return;
+		
 		for(int z = 0; z < IRCServer.channels.length; z++) {
 			if(inChannel[z]) {
 				IRCServer.broadcast(formatUserID() + " QUIT :" + reason, IRCServer.channels[z].name);
@@ -602,6 +623,9 @@ public class IRCUser extends Thread {
 	}
 	
 	public void sendln(String s) {
+		if(!JayWormNet.invokeMasterScriptFunction("onIRCRawSent", this, s))
+			return;
+		
 		if(socket != null) {
 			try {
 				if(JayWormNet.config.charset.equals("native"))
@@ -617,7 +641,8 @@ public class IRCUser extends Thread {
 	}
 
 	public void sendMessage(String message) {
-		sendln(formatMessage(getNickname(), message));
+		if(JayWormNet.invokeMasterScriptFunction("onIRCMessageSent", this, message))
+			sendln(formatMessage(getNickname(), message));
 	}
 
 	String getEventCode(int event) {
