@@ -127,6 +127,25 @@ public class IRCServer extends Thread {
 	public static boolean isChannelExist(String chName) {
 		return (Channel.indexOf(IRCServer.channels, chName) == -1)? false: true;
 	}
+	
+	public static int getUsersInChannel(String chName) { // how many users in channel
+		int result = 0;
+		int chanNo = Channel.indexOf(channels, chName);
+		for(IRCUser u: users)
+			if(u.inChannel[chanNo])
+				result++;
+		
+		return result;
+	}
+	
+	public static int getUsersOutsideChannels() {
+		int result = 0;
+		for(IRCUser u: users)
+			if(!u.inAnyChannel())
+				result++;
+		
+		return result;
+	}
 
 	// MOTD
 	public static String[] motdLines = null;

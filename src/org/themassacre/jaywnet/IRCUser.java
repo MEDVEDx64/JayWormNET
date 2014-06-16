@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Date;
 
 import org.themassacre.util.WACharTable;
@@ -458,6 +459,26 @@ public class IRCUser extends Thread {
 						sendEvent(323, ":End of /LIST");
 
 					}
+					
+					else if(command.equals("NAMES")) {
+						if(body.length() == 0)
+							sendNamesList(null);
+						else {
+							String[] src = body.split(" |:")[0].split(",");
+							ArrayList<String> filtered = new ArrayList<String>();
+							for(String s: src)
+								if(s.length() > 2 && s.charAt(0) == '#' && IRCServer
+										.isChannelExist(s.substring(1)))
+									filtered.add(s.substring(1));
+							
+							if(filtered.size() == 0)
+								sendNamesList(null);
+							else {
+								String[] chList = new String[filtered.size()];
+								sendNamesList(filtered.toArray(chList));
+							}
+						}
+					}
 
 					else sendEvent(421, command + " :Unknown command");
 				}
@@ -489,6 +510,39 @@ public class IRCUser extends Thread {
 		}
 	}
 	
+	public void sendNamesList(String[] channels) {
+		String[] nChannels;
+		if(channels == null || channels.length == 0) {
+			nChannels = new String[IRCServer.channels.length];
+			for(int i = 0; i < IRCServer.channels.length; i++)
+				nChannels[i] = IRCServer.channels[i].name;
+		}
+		else nChannels = channels;
+		
+		if(channels != null && channels.length != 0) {
+			for(String chName: nChannels)
+				if(IRCServer.getUsersInChannel(chName) > 0)
+					sendSingleNamesList(chName);
+		} else if(IRCServer.getUsersOutsideChannels() > 0)
+			sendSingleNamesList(null);
+		
+		sendEvent(366, "* :End of /NAMES list.");
+	}
+	
+	private void sendSingleNamesList(String chName) {
+		String response = ":" + JayWormNet.config.serverHost + " 353 " + nickname
+				+ (chName == null?  " * *": " = #" + chName) + " :";
+		for(int z = 0; z < IRCServer.users.size(); z++) {
+			IRCUser u = IRCServer.users.get(z);
+			if((chName == null? !u.inAnyChannel(): u.inChannel[Channel.indexOf(IRCServer.channels, chName)])) {
+				if(IRCServer.users.get(z).modes['o'])
+					response += "@";
+				response = response + u.nickname + " ";
+			}
+		}
+		sendln(response);
+	}
+	
 	public void join(String chName) {
 		if(!JayWormNet.invokeMasterScriptFunction("onIRCUserJoined", this, chName))
 			return;
@@ -512,18 +566,8 @@ public class IRCUser extends Thread {
 				IRCServer.broadcast(":" + serverHost + " MODE #"
 						+ chName + " +o " + nickname, chName);
 
-			String response = ":" + serverHost + " 353 " + nickname + " = #"
-					+ chName + " :";
-			for(int z = 0; z < IRCServer.users.size(); z++) {
-				IRCUser u = IRCServer.users.get(z);
-				if(u.inChannel[Channel.indexOf(channels, chName)]) {
-					if(IRCServer.users.get(z).modes['o'])
-						response += "@";
-					response = response + u.nickname + " ";
-				}
-			}
-			sendln(response);
-			sendEvent(336, "#" + chName + " :End of /NAMES list."); // do not remove!
+			String[] ch = { chName };
+			sendNamesList(ch);
 
 		}
 	}
