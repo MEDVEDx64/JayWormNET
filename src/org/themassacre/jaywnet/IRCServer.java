@@ -374,7 +374,7 @@ class UserWatcher extends Thread {
 			}
 
 			if(timer == interval)
-				user.sendln("PING :beep!");
+				user.sendln("PING :" + JayWormNet.config.serverHost);
 			if(timer == interval + timeout) {
 				user.quitMessage = "Ping timeout: " + timeout;
 
