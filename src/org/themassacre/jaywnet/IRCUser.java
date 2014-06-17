@@ -122,6 +122,7 @@ public class IRCUser extends Thread {
 		final String serverHost = JayWormNet.config.serverHost;
 		final Channel[] channels = IRCServer.channels;
 		String addr = socket.getInetAddress().toString().substring(1);
+		String fragment = "";
 		String password = "";
 
 		try {
@@ -149,19 +150,35 @@ public class IRCUser extends Thread {
 				if(!JayWormNet.invokeMasterScriptFunction("onIRCRawReceived", this, bytes, bytesRead))
 					continue;
 
-				String[] lines = (JayWormNet.config.charset.equals("native")? WACharTable.decode(bytes):
-					new String(bytes, JayWormNet.config.charset)).trim().split("\n+");
-				WNLogger.l.finest("Input message: " + (JayWormNet.config.charset.equals("native")?
-						WACharTable.decode(bytes):
-					new String(bytes, JayWormNet.config.charset)).trim());
+				ArrayList<String> linesList = new ArrayList<String>();
+				StringBuffer lineBuffer = new StringBuffer();
+				lineBuffer.append(fragment);
+				for(int i = 0; i < bytes.length-1; i++) {
+					if(bytes[i] == '\0') break;
+					else if(bytes[i] == '\r' && bytes[i+1] == '\n') {
+						if(lineBuffer.length() > 0) {
+							linesList.add(new String(lineBuffer));
+							lineBuffer = new StringBuffer();
+						} else
+							sendEvent(421, ":Empty message");
+						i++;
+					} else {
+						byte[] arr = { bytes[i] };
+						lineBuffer.append((JayWormNet.config.charset.equals("native")?
+								WACharTable.decode(bytes[i]):
+								new String(arr, JayWormNet.config.charset)));
+					}
+				}
+				
+				fragment = new String(lineBuffer);
+				if(linesList.size() == 0)
+					continue;
+				String[] lines = new String[linesList.size()];
+				lines = linesList.toArray(lines);
 
 				for(int i = 0; i < lines.length; i++) {
 					String buffer = lines[i].trim();
-
-					if(buffer.length() == 0) {
-						sendEvent(421, ":Empty message");
-						continue;
-					}
+					WNLogger.l.finest("Input message: " + buffer);
 
 					// Parsing
 					String command = buffer.toUpperCase().substring(0, (buffer + " ").indexOf(" "));
