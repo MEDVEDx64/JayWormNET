@@ -36,7 +36,7 @@ class Channel {
 	// Returns index of a channel in Channels array by it's name
 	public static int indexOf(Channel[] channels, String chName) {
 		for(int i = 0; i < channels.length; i++) {
-			if(channels[i].name.equals(chName)) return i;
+			if(channels[i].name.equalsIgnoreCase(chName)) return i;
 		}
 
 		return -1;
