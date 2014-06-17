@@ -18,7 +18,7 @@ public class JayWormNet {
 	private static String lastInvocation = "unknown";
 	
 	public static ConfigurationManager config;
-	public static final String version = "beta9";
+	public static final String version = "beta10";
 	public static boolean forceNoGUI = false;
 
 	static void printHelp() {
