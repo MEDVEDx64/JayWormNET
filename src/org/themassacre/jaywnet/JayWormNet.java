@@ -18,8 +18,7 @@ public class JayWormNet {
 	private static String lastInvocation = "unknown";
 	
 	public static ConfigurationManager config;
-	public static final String version = "beta8_java1.6";
-
+	public static final String version = "beta10_java1.6";
 	public static boolean forceNoGUI = false;
 
 	static void printHelp() {
@@ -63,6 +62,9 @@ public class JayWormNet {
 	}
 	
 	public static void reloadMasterScript() {
+		if(!config.masterScriptEnabled)
+			return;
+		
 		try {
 			engine.eval(new InputStreamReader(StreamUtils.getResourceAsStream(
 					config.masterScriptFileName, config)));
@@ -74,6 +76,9 @@ public class JayWormNet {
 	}
 	
 	public static boolean invokeMasterScriptFunction(String func, Object ... args) {
+		if(!config.masterScriptEnabled)
+			return true;
+		
 		lastInvocation = func;
 		try {
 			return (Boolean)masterScript.invokeFunction(func, args);

@@ -63,7 +63,7 @@ import org.themassacre.util.*;
 	public int floodGate = 1000;
 	public int floodMaxLevel = 4;
 	
-	// HTML/IRC MOTD
+	// MOTD
 	public boolean	ircShowMOTD			= true;
 	public boolean	httpShowMOTD		= true;
 	public String	ircMOTDFileName		= "motd.txt";
@@ -91,6 +91,7 @@ import org.themassacre.util.*;
 	public String		commandsListFileName	= "commands.lst";
 
 	// Scripts configuration
+	public boolean		masterScriptEnabled			= false;
 	public String		masterScriptFileName		= "master.js";
 	public String		scriptedCommandsPrefix		= "commands/";
 	public boolean		invocationWarningsEnabled	= false;

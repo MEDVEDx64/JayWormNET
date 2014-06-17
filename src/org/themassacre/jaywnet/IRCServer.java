@@ -36,7 +36,7 @@ class Channel {
 	// Returns index of a channel in Channels array by it's name
 	public static int indexOf(Channel[] channels, String chName) {
 		for(int i = 0; i < channels.length; i++) {
-			if(channels[i].name.equals(chName)) return i;
+			if(channels[i].name.equalsIgnoreCase(chName)) return i;
 		}
 
 		return -1;
@@ -131,6 +131,25 @@ public class IRCServer extends Thread {
 
 	public static boolean isChannelExist(String chName) {
 		return (Channel.indexOf(IRCServer.channels, chName) == -1)? false: true;
+	}
+	
+	public static int getUsersInChannel(String chName) { // how many users in channel
+		int result = 0;
+		int chanNo = Channel.indexOf(channels, chName);
+		for(IRCUser u: users)
+			if(u.inChannel[chanNo])
+				result++;
+		
+		return result;
+	}
+	
+	public static int getUsersOutsideChannels() {
+		int result = 0;
+		for(IRCUser u: users)
+			if(!u.inAnyChannel())
+				result++;
+		
+		return result;
 	}
 
 	// MOTD
@@ -376,7 +395,7 @@ class UserWatcher extends Thread {
 			}
 
 			if(timer == interval)
-				user.sendln("PING :beep!");
+				user.sendln("PING :" + JayWormNet.config.serverHost);
 			if(timer == interval + timeout) {
 				user.quitMessage = "Ping timeout: " + timeout;
 
