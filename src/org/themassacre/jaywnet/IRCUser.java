@@ -127,6 +127,7 @@ public class IRCUser extends Thread {
 
 		try {
 
+			quithere:
 			do {
 				// Read from client
 				byte[] bytes = new byte[JayWormNet.config.IRCBufferSize];
@@ -177,6 +178,9 @@ public class IRCUser extends Thread {
 				lines = linesList.toArray(lines);
 
 				for(int i = 0; i < lines.length; i++) {
+					if(socket == null)
+						break quithere;
+					
 					String buffer = lines[i].trim();
 					WNLogger.l.finest("Input message: " + buffer);
 
@@ -255,7 +259,6 @@ public class IRCUser extends Thread {
 
 					else if(command.equals("QUIT")) {
 						quit((body.length() == 0? "": body.substring(1)));
-						break;
 					}
 
 					else if(command.equals("JOIN")) {
@@ -504,10 +507,12 @@ public class IRCUser extends Thread {
 
 		} catch(InterruptedByInvocationException eInv) {
 		} catch(Exception e) {
-			e.printStackTrace();
-			quit(quitMessage.length() == 0? (e.getMessage().contains("disconnect")? e.getMessage():
+			if(!isDisconnected(e)) {
+				e.printStackTrace();
+				WNLogger.l.warning(e.toString());
+			}
+			quit(quitMessage.length() == 0? (isDisconnected(e)? e.getMessage():
 				"Internal server error"): quitMessage);
-			WNLogger.l.warning((quitMessage.length() == 0? e.toString(): quitMessage));
 
 		} finally {
 			if(socket != null) {
@@ -525,6 +530,10 @@ public class IRCUser extends Thread {
 			if(IRCServer.users.contains(this))
 				IRCServer.users.remove(this);
 		}
+	}
+	
+	private boolean isDisconnected(Exception exceptionObj) {
+		return exceptionObj.getMessage().contains("disconnect");
 	}
 	
 	public void sendNamesList(String[] channels) {
