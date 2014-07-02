@@ -15,10 +15,10 @@ Before building, you may want to change JayWormNET's default configuration files
 Embedding configuration files
 =============================
 
-Usually, *JayWormNET* stores it's configuration files inside it's own .jar package. Any of them may be overridden by an external copy,
-placed to the current working directory.
-
-It's a good practice (for convenient deploying) to pre-configure the server before the build right in the `config` directory,
+Usually, *JayWormNET* stores it's configuration files inside it's own .jar package.
+Any of them may be overridden by an external copy, placed to the current
+working directory. It's a good practice (for convenient deploying)
+to pre-configure the server before the build right in the `config` directory,
 so once your .jar gets built, it already will be configured and ready for use.
 
 See :ref:`config` for further instructions.
