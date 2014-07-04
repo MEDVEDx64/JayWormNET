@@ -26,8 +26,8 @@ Example::
 
 By the way, this file is the only one which name can't be changed (or even the file be moved).
 
-This file is a set of variables with the simpliest syntax ``suchVariable = true`` per line.
-Any unrecognized stuff (unknown variables, emply lines, symbols, etc.) is simply ignored,
+This file is a set of variables with the simplest syntax ``suchVariable = true`` per line.
+Any unrecognized stuff (unknown variables, empty lines, symbols, etc.) is simply ignored,
 so you can write comments in this file absolutely free. The only exception for commenting goes
 for `after-line-comments`, which is not allowed and will cause your value to not be parsed properly.
 
@@ -66,7 +66,7 @@ int        ``specialMessagesPermissionLevel``      ``1``                        
 IRC pinging
 -----------
 
-Pings avoid non-responding or unexceptedly disconnected users stay on server
+Pings avoid non-responding or unexpectedly disconnected users stay on server
 by dropping them when the ping response timeout is reached.
 
 ========== ======================================= =============================== =========================================================================

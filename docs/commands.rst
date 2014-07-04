@@ -9,7 +9,7 @@ The commands should be enabled in the configuration file (see :ref:`config_wnetc
 also don't forget to white-list required commands if it isn't done yet: :ref:`config_cmdlist`.
 
 Custom in-chat commands may be used to expand JayWormNET's functionality. There are two kinds of them: `embedded` and `scripted`.
-First written in Java and comes as plugins (Java classes), which can be embedded in distributive jar or injectec via modifying
+First written in Java and comes as plugins (Java classes), which can be embedded in distributive jar or injected via modifying
 of Java's Classpath variable. The second kind of commands are written in JavaScript and can be updated and re-evaluated on-the-fly.
 
 Standard set of embedded commands
