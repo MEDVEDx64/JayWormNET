@@ -11,6 +11,8 @@ JayWormNET's hard-coded defaults.
 
 .. JayWormNET have the following configuration files:
 
+.. _config_wnetcfg:
+
 The main configuration file
 ===========================
 
@@ -121,8 +123,7 @@ String     ``httpMOTDFileName``                    ``motd.html``
 HTTP fallback settings
 ----------------------
 
-Fallback page is what HTTP client will receive, when trying to visit any non-WormNET
-(or simply non-existent) page.
+See :ref:`config_fallback`
 
 ========== ======================================= =============================== =========================================================================
 Type       Variable                                Example / Defaults              Description / Notes
@@ -182,15 +183,15 @@ String     ``guiBackgroundColor``                  ``default``
 String     ``guiForegroundColor``                  ``default``
 ========== ======================================= =============================== =========================================================================
 
-Additional in-chat commands
----------------------------
+In-chat commands
+----------------
 
 ========== ======================================= =============================== =========================================================================
 Type       Variable                                Example / Defaults              Description / Notes
 ========== ======================================= =============================== =========================================================================
 boolean    ``commandsEnabled``                     ``false``                       Enable additional commands, affects scripted commands too (when false)
 boolean    ``scriptedCommandsEnabled``             ``false``
-boolean    ``showCommandsInChat``                  ``false``                       **WARNING: using of ``!oper`` command will result in password leak!**
+boolean    ``showCommandsInChat``                  ``false``                       **WARNING: using of** ``!oper`` **command will result in password leak!**
 boolean    ``swallowAllCommands``                  ``false``                       Overrides ``showCommandsInChat``
 ========== ======================================= =============================== =========================================================================
 
@@ -220,3 +221,99 @@ boolean    ``IRCSkipBytesWhenAvailable``           ``false``
 boolean    ``dropIRCUserOnOverflow``               ``false``
 int        ``IRCBufferSize``                       ``262144``
 ========== ======================================= ===============================
+
+Ban-list and white-list
+=======================
+
+.. highlight:: none
+
+| ``banlist.csv``
+| ``whitelist.csv``
+
+
+Example::
+
+	Nickname, *
+	*, 192.168.1.10
+	mr_troll, 192.168.1.5 127.0.0.1
+
+These lists are used for IRC server access restrictions. Ban-list prevents the listed clients to join,
+and vice-versa, white-list prevents **non-listed** clients to join (of course, when enabled).
+Both lists may be enabled and combined in use. Remember that ban-list has higher priority than the white-list.
+
+Both files have the CSV-table (comma-separated values) format.
+There are two columns: `Nickname` and `Address`, and they are describing for whom the restrictions will be
+applied. The `Nickname` field can contain only one nickname or the `*` wildcard (affecting any nickname).
+The `Address` field can contain single IP, list of addresses separated by space or the `*` wildcard.
+
+Channels list
+=============
+
+``channels.lst``
+
+Example::
+
+	Robots::Aperture Science
+	AnythingGoes:Pf,Be:Open channel, blah blah.
+	WormnetCrew:Pf,Be:
+	ProfessionalPootis::03 Ranked channel
+
+This is the list of statically pre-defined IRC channels, presented as a table with three columns, separated by colons:
+
+* Channel name (without ``#`` or something)
+* Game scheme (optional, defaulting to ``Pf,Be`` when is not present)
+* Channel description (optional)
+
+You may set a channel icon by adding a two-digit number with space to beginning of channel's description:
+``HelpChannel::05 Description``
+
+This file cannot be reloaded on-the-fly.
+
+.. _config_cmdlist:
+
+In-chat commands white-list
+===========================
+
+``commands.lst``
+
+Example::
+
+	kick
+	oper
+	reload
+
+This is a list of allowed for invocation IRC in-chat commands. It affects both the scripted
+and embedded commands. Non-white-listed commands will be "non-existent" even it is present.
+See :ref:`commands`.
+
+Message of the Day
+==================
+
+There are two MOTD files: `txt` is for IRC and `html` is the page being displayed at the right bottom
+in Worms Armageddon >= 3.7.0.0 on the channel selection menu. 
+
+``motd.txt``
+
+Example::
+
+	I am the MOTD message!
+
+``motd.html``
+
+.. highlight:: html
+
+Example::
+
+	<center><FONT SIZE="2" COLOR="Yellow">
+		<BR>Welcome to JayWormNET server!
+	</FONT></center>
+
+.. _config_fallback:
+
+Fallback page
+=============
+
+``fallback.html``
+
+Fallback page is what HTTP client will receive, when trying to visit any non-WormNET
+(or simply non-existent) page (if enabled in configuration).
